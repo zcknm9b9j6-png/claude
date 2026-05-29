@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
 import {
   formatLong,
@@ -11,6 +12,27 @@ interface Props {
   subtitle: string;
   color: BrandColor;
   onOpenSettings: () => void;
+  onOpenBackup: () => void;
+}
+
+/** Brand logo: uses public/logo.png when present, falls back to a wordmark. */
+function Logo() {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-extrabold">
+        FAIR PLAY OOSH
+      </span>
+    );
+  }
+  return (
+    <img
+      src="logo.png"
+      alt="Fair Play OOSH"
+      onError={() => setFailed(true)}
+      className="h-9 w-auto rounded bg-white/90 p-0.5"
+    />
+  );
 }
 
 /**
@@ -24,6 +46,7 @@ export default function InfoHeader({
   subtitle,
   color,
   onOpenSettings,
+  onOpenBackup,
 }: Props) {
   const status = termStatus(config);
   const today = new Date();
@@ -43,17 +66,25 @@ export default function InfoHeader({
         style={{ background: BRAND.teal.base }}
       >
         <div className="flex items-center gap-2 font-extrabold tracking-tight">
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs">FAIR PLAY OOSH</span>
+          <Logo />
           <span className="hidden text-sm font-semibold sm:inline">
             Out of School Hours Care · Newcastle &amp; Hunter
           </span>
         </div>
-        <button
-          onClick={onOpenSettings}
-          className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
-        >
-          Term dates
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenBackup}
+            className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
+          >
+            Backup
+          </button>
+          <button
+            onClick={onOpenSettings}
+            className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
+          >
+            Term dates
+          </button>
+        </div>
       </div>
 
       {/* Row 2: sheet title, coloured by active tab */}

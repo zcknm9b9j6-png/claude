@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BackupModal from "./components/BackupModal";
 import InfoHeader from "./components/InfoHeader";
 import SettingsModal from "./components/SettingsModal";
 import Tabs, { type TabDef } from "./components/Tabs";
@@ -22,6 +23,7 @@ export default function App() {
   const [config, setConfig] = usePersistentState<TermConfig>("config", DEFAULT_CONFIG);
   const [active, setActive] = useState("weekly");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   const tab = TABS.find((t) => t.key === active) ?? TABS[0];
 
@@ -33,6 +35,7 @@ export default function App() {
         subtitle={tab.subtitle}
         color={tab.color}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenBackup={() => setBackupOpen(true)}
       />
       <Tabs tabs={TABS} active={active} onChange={setActive} />
 
@@ -45,8 +48,8 @@ export default function App() {
       </main>
 
       <footer className="px-5 py-3 text-center text-xs text-ink-soft">
-        Fair Play OOSH · Newcastle &amp; Hunter · fairplayoosh.com.au — your data is
-        saved in this browser.
+        Fair Play OOSH · Newcastle &amp; Hunter · fairplayoosh.com.au — data saved in
+        this browser. Use <strong>Backup</strong> to move it between devices.
       </footer>
 
       {settingsOpen && (
@@ -56,6 +59,8 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
         />
       )}
+
+      {backupOpen && <BackupModal onClose={() => setBackupOpen(false)} />}
     </div>
   );
 }
