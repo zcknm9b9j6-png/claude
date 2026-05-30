@@ -8,3 +8,6 @@ npm-debug.log*
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+# packaged drag-and-drop deploy bundle (generated, delivered directly)
+fairplay-oosh-app.zip
