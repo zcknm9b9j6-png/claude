@@ -15,10 +15,16 @@ interface Props {
   onOpenBackup: () => void;
 }
 
-/** Brand logo: uses public/logo.png when present, falls back to a wordmark. */
+/**
+ * Brand logo. Tries an uploaded raster `logo.png` first (drop one in /public to
+ * override), falls back to the hand-built vector `logo.svg`, then to a text
+ * wordmark if neither asset is present.
+ */
+const LOGO_SOURCES = ["logo.png", "logo.svg"];
+
 function Logo() {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
+  const [idx, setIdx] = useState(0);
+  if (idx >= LOGO_SOURCES.length) {
     return (
       <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-extrabold">
         FAIR PLAY OOSH
@@ -27,9 +33,9 @@ function Logo() {
   }
   return (
     <img
-      src="logo.png"
+      src={LOGO_SOURCES[idx]}
       alt="Fair Play OOSH"
-      onError={() => setFailed(true)}
+      onError={() => setIdx((i) => i + 1)}
       className="h-9 w-auto rounded bg-white/90 p-0.5"
     />
   );
