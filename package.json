@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Fair Play OOSH personal task tracker — Weekly, Term, Yearly, Project trackers and a custom calendar, driven by NSW school term dates.",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
