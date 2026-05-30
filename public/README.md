@@ -2,16 +2,22 @@
 
 Files in this folder are served from the site root, unchanged.
 
-## Add your logo
+## Logo
 
-Drop your logo image here named exactly **`logo.png`**:
+The header logo is **`public/logo.svg`** — a vector recreation of the Fair Play
+OOSH wordmark. Being vector, it stays sharp at any size.
+
+### Want to use the exact original logo instead?
+
+Drop a raster image named **`logo.png`** in this folder:
 
 ```
 public/logo.png
 ```
 
-It will appear automatically in the top-left of the app's header. Until a
-`logo.png` exists, the header shows a "FAIR PLAY OOSH" text wordmark instead.
+The header checks for `logo.png` **first**, so it will automatically override
+`logo.svg` with no code change. (Easiest way to add it: upload via github.com in
+a browser — the GitHub mobile *app* can't upload images.)
 
-A roughly square or wide PNG with a transparent background works best
-(the header displays it ~36px tall).
+If neither file is present, the header falls back to a "FAIR PLAY OOSH" text
+wordmark.
