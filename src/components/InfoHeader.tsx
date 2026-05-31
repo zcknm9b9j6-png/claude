@@ -9,6 +9,7 @@ interface Props {
   color: BrandColor;
   onOpenSettings: () => void;
   onOpenBackup: () => void;
+  onOpenSync: () => void;
   onJumpToTerm: () => void;
 }
 
@@ -70,6 +71,7 @@ export default function InfoHeader({
   color,
   onOpenSettings,
   onOpenBackup,
+  onOpenSync,
   onJumpToTerm,
 }: Props) {
   const now = new Date();
@@ -89,6 +91,9 @@ export default function InfoHeader({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <button onClick={onOpenSync} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-teal hover:bg-white/90">
+            ☁ Cloud Sync
+          </button>
           <button onClick={onOpenBackup} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30">
             Backup
           </button>

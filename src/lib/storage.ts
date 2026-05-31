@@ -27,6 +27,8 @@ export function usePersistentState<T>(
   useEffect(() => {
     try {
       localStorage.setItem(fullKey, JSON.stringify(state));
+      // Tell the cloud-sync engine something changed (debounced upstream).
+      window.dispatchEvent(new CustomEvent("fpo-data-changed"));
     } catch {
       /* storage full or blocked — keep working in-memory */
     }
