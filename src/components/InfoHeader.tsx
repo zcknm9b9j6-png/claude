@@ -1,17 +1,16 @@
+import { useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
+import { formatLong, termStatus, type TermConfig } from "../lib/terms";
 
 interface Props {
+  config: TermConfig;
   title: string;
   subtitle: string;
   color: BrandColor;
   onOpenSettings: () => void;
   onOpenBackup: () => void;
+  onJumpToTerm: () => void;
 }
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
 
 const QUOTES = [
   "Small daily improvements lead to stunning results.",
@@ -31,16 +30,6 @@ const QUOTES = [
   "You are capable of amazing things.",
 ];
 
-function ordinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
-function prettyDate(d: Date): string {
-  return `${ordinal(d.getDate())} of ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
-
 function greeting(d: Date): string {
   const h = d.getHours();
   if (h < 12) return "Good morning, Aimee";
@@ -54,73 +43,92 @@ function quoteOfTheDay(d: Date): string {
   return QUOTES[dayOfYear % QUOTES.length];
 }
 
-/** Logo with graceful fallback: logo.png → logo.svg → wordmark. */
+/** Logo with graceful fallback: logo.png → wordmark if it can't load. */
 function Logo() {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="rounded-lg bg-white px-2 py-1 font-heading text-sm font-bold text-teal">
+        FAIR PLAY OOSH
+      </span>
+    );
+  }
   return (
     <img
-      src="logo.png"
+      src="./logo.png"
       alt="Fair Play OOSH"
-      className="h-12 w-auto rounded-lg bg-white/90 p-1 animate-logo-in"
+      onError={() => setFailed(true)}
+      className="h-14 w-auto rounded-lg bg-white p-1 shadow-sm animate-logo-in"
     />
   );
 }
 
-/**
- * Sticky header: brand banner with greeting, today's date, an inspirational
- * quote of the day, and the active-view title band coloured by tab.
- */
 export default function InfoHeader({
+  config,
   title,
   subtitle,
   color,
   onOpenSettings,
   onOpenBackup,
+  onJumpToTerm,
 }: Props) {
   const now = new Date();
+  const status = termStatus(config);
 
   return (
     <header className="sticky top-0 z-20 shadow-sm">
-      {/* Row 1: brand banner with greeting */}
-      <div
-        className="flex items-center gap-3 px-5 py-2 text-white"
-        style={{ background: BRAND.teal.base }}
-      >
+      {/* Row 1: brand banner with greeting + actions */}
+      <div className="flex items-center gap-3 px-5 py-2 text-white" style={{ background: BRAND.teal.base }}>
         <Logo />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-base font-extrabold leading-tight">
-            {greeting(now)} 👋
+          <div className="truncate font-heading text-lg font-bold leading-tight">
+            {greeting(now)}
           </div>
-          <div className="text-xs font-medium text-white/85">
-            {prettyDate(now)} · Updating daily
+          <div className="text-xs font-semibold text-white/90">
+            {formatLong(now)}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={onOpenBackup}
-            className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
-          >
+          <button onClick={onOpenBackup} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30">
             Backup
           </button>
-          <button
-            onClick={onOpenSettings}
-            className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
-          >
+          <button onClick={onOpenSettings} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30">
             Term dates
           </button>
         </div>
       </div>
 
-      {/* Row 2: quote of the day */}
-      <div className="bg-white px-5 py-1.5 text-center text-[13px] italic text-ink-soft">
+      {/* Row 2: live Term / Week / Date banner + jump button */}
+      <div className="flex flex-wrap items-center gap-2 bg-white px-5 py-2">
+        <span className="rounded-lg px-3 py-1 text-sm font-bold text-white" style={{ background: BRAND.purple.base }}>
+          {status.term ? status.term.label : "Outside term"}
+        </span>
+        <span className="rounded-lg px-3 py-1 text-sm font-bold text-white" style={{ background: BRAND.pink.base }}>
+          {status.week ? `Week ${status.week}` : "—"}
+        </span>
+        <span className="rounded-lg px-3 py-1 text-sm font-bold text-white" style={{ background: BRAND.lime.base }}>
+          {formatLong(now)}
+        </span>
+        <span className="flex-1" />
+        {status.term && (
+          <button
+            onClick={onJumpToTerm}
+            className="rounded-full px-3 py-1 text-xs font-bold text-white hover:opacity-90"
+            style={{ background: BRAND.orange.base }}
+          >
+            Jump to {status.term.label} ↓
+          </button>
+        )}
+      </div>
+
+      {/* Row 3: quote of the day */}
+      <div className="bg-white px-5 pb-1.5 text-center text-[13px] italic text-ink-soft">
         “{quoteOfTheDay(now)}”
       </div>
 
-      {/* Row 3: active view title, coloured by tab */}
-      <div
-        className="flex items-baseline gap-3 px-5 py-2 text-white"
-        style={{ background: BRAND[color].base }}
-      >
-        <h1 className="text-lg font-extrabold leading-none">{title}</h1>
+      {/* Row 4: active view title, coloured by tab */}
+      <div className="flex items-baseline gap-3 px-5 py-2 text-white" style={{ background: BRAND[color].base }}>
+        <h1 className="font-heading text-lg font-bold leading-none">{title}</h1>
         <span className="text-xs font-medium text-white/80">{subtitle}</span>
       </div>
     </header>

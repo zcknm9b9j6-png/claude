@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { BRAND, type BrandColor } from "../brand";
+import { BRAND, type BrandColor, COLOR_CHOICES } from "../brand";
 import { DoneToggle } from "../components/controls";
 import { TERM_SECTIONS, TERM_TASKS } from "../data/seed";
 import { makeId, usePersistentState } from "../lib/storage";
@@ -18,7 +18,6 @@ interface Section {
 }
 
 const TERM_IDS: TermId[] = [1, 2, 3, 4];
-const COLOR_CHOICES: BrandColor[] = ["teal", "purple", "blue", "pink", "lime", "orange"];
 
 function seed(): Section[] {
   return TERM_SECTIONS.map((s) => ({
@@ -34,7 +33,6 @@ export default function TermTracker({ config }: { config: TermConfig }) {
 
   const patchSection = (id: string, fn: (s: Section) => Section) =>
     setSections((ss) => ss.map((s) => (s.id === id ? fn(s) : s)));
-
   const renameSection = (id: string, name: string) => patchSection(id, (s) => ({ ...s, name }));
   const addSection = () =>
     setSections((ss) => [...ss, { id: makeId(), name: "New section", color: "teal", tasks: [] }]);
@@ -47,9 +45,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
   const toggle = (sid: string, tid: string, term: TermId) =>
     patchSection(sid, (s) => ({
       ...s,
-      tasks: s.tasks.map((t) =>
-        t.id === tid ? { ...t, done: { ...t.done, [term]: !t.done[term] } } : t,
-      ),
+      tasks: s.tasks.map((t) => (t.id === tid ? { ...t, done: { ...t.done, [term]: !t.done[term] } } : t)),
     }));
   const removeTask = (sid: string, tid: string) =>
     patchSection(sid, (s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== tid) }));
@@ -61,7 +57,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
     <div className="mx-auto max-w-5xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">
-          One tick per term for recurring work. Click a section heading to rename it.
+          One tick per term for recurring work. Click any heading or task to rename it.
         </p>
         <button onClick={addSection} className="pill shrink-0" style={{ background: BRAND.purple.base }}>
           + Add section
@@ -74,9 +70,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
               <th className="w-12 px-2 py-2 text-left font-bold">#</th>
               <th className="px-3 py-2 text-left font-bold">Task</th>
               {config.terms.map((t) => (
-                <th key={t.id} className="w-20 px-2 py-2 text-center font-bold">
-                  T{t.id}
-                </th>
+                <th key={t.id} className="w-20 px-2 py-2 text-center font-bold">T{t.id}</th>
               ))}
               <th className="w-10" />
             </tr>
@@ -90,7 +84,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
                       <input
                         value={section.name}
                         onChange={(e) => renameSection(section.id, e.target.value)}
-                        className="flex-1 bg-transparent text-xs font-extrabold uppercase tracking-wide text-white outline-none placeholder:text-white/60"
+                        className="flex-1 bg-transparent font-heading text-sm font-bold uppercase tracking-wide text-white outline-none placeholder:text-white/60"
                         placeholder="Section name…"
                       />
                       <select
@@ -103,13 +97,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
                           <option key={c} value={c} className="text-ink">{c}</option>
                         ))}
                       </select>
-                      <button
-                        onClick={() => removeSection(section.id)}
-                        className="text-white/80 hover:text-white"
-                        title="Delete section"
-                      >
-                        ✕
-                      </button>
+                      <button onClick={() => removeSection(section.id)} className="text-white/80 hover:text-white" title="Delete section">✕</button>
                     </div>
                   </td>
                 </tr>
@@ -117,12 +105,7 @@ export default function TermTracker({ config }: { config: TermConfig }) {
                   <tr key={task.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-2 py-1 text-center text-xs text-ink-soft">{i + 1}</td>
                     <td className="px-1 py-1">
-                      <input
-                        className="cell-input"
-                        value={task.name}
-                        placeholder="New task…"
-                        onChange={(e) => renameTask(section.id, task.id, e.target.value)}
-                      />
+                      <input className="cell-input" value={task.name} placeholder="New task…" onChange={(e) => renameTask(section.id, task.id, e.target.value)} />
                     </td>
                     {TERM_IDS.map((term) => (
                       <td key={term} className="px-2 py-1">
@@ -130,25 +113,14 @@ export default function TermTracker({ config }: { config: TermConfig }) {
                       </td>
                     ))}
                     <td className="px-1 text-center">
-                      <button
-                        onClick={() => removeTask(section.id, task.id)}
-                        className="text-ink-soft/50 hover:text-pink"
-                        title="Delete row"
-                      >
-                        ✕
-                      </button>
+                      <button onClick={() => removeTask(section.id, task.id)} className="text-ink-soft/50 hover:text-pink" title="Delete row">✕</button>
                     </td>
                   </tr>
                 ))}
                 <tr>
                   <td />
                   <td colSpan={6} className="px-1 py-1">
-                    <button
-                      onClick={() => addTask(section.id)}
-                      className="text-xs font-bold text-ink-soft hover:text-purple"
-                    >
-                      + Add task
-                    </button>
+                    <button onClick={() => addTask(section.id)} className="text-xs font-bold text-ink-soft hover:text-purple">+ Add task</button>
                   </td>
                 </tr>
               </Fragment>
@@ -156,13 +128,9 @@ export default function TermTracker({ config }: { config: TermConfig }) {
           </tbody>
           <tfoot>
             <tr className="text-white" style={{ background: BRAND.purple.shade }}>
-              <td colSpan={2} className="px-3 py-2 text-right font-bold">
-                Tasks complete ({allTasks.length} total)
-              </td>
+              <td colSpan={2} className="px-3 py-2 text-right font-bold">Tasks complete ({allTasks.length} total)</td>
               {totals.map((n, i) => (
-                <td key={i} className="px-2 py-2 text-center font-extrabold">
-                  {n}
-                </td>
+                <td key={i} className="px-2 py-2 text-center font-bold">{n}</td>
               ))}
               <td />
             </tr>

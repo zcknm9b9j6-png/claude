@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { BRAND, type BrandColor } from "../brand";
+import { BRAND, type BrandColor, COLOR_CHOICES } from "../brand";
 import { StatusSelect } from "../components/controls";
 import { YEARLY_SECTIONS, YEARLY_TASKS } from "../data/seed";
 import { makeId, usePersistentState } from "../lib/storage";
@@ -10,8 +10,6 @@ interface Task {
   id: string;
   name: string;
   status: Status;
-  dateCompleted: string;
-  responsible: string;
   notes: string;
 }
 interface Section {
@@ -24,15 +22,13 @@ interface Section {
 const STATUS_OPTIONS: Status[] = ["—", "In Progress", "Done"];
 const STATUS_COLORS: Record<string, string> = {
   Done: BRAND.lime.base,
-  "In Progress": "#F0A814",
+  "In Progress": BRAND.orange.base,
   "—": "transparent",
 };
-const COLOR_CHOICES: BrandColor[] = ["teal", "purple", "blue", "pink", "lime", "orange"];
 
 function newTask(): Task {
-  return { id: makeId(), name: "", status: "—", dateCompleted: "", responsible: "", notes: "" };
+  return { id: makeId(), name: "", status: "—", notes: "" };
 }
-
 function seed(): Section[] {
   return YEARLY_SECTIONS.map((s) => ({
     id: makeId(),
@@ -49,11 +45,10 @@ export default function YearlyTracker() {
     setSections((ss) => ss.map((s) => (s.id === id ? fn(s) : s)));
   const renameSection = (id: string, name: string) => patchSection(id, (s) => ({ ...s, name }));
   const addSection = () =>
-    setSections((ss) => [...ss, { id: makeId(), name: "New section", color: "blue", tasks: [] }]);
+    setSections((ss) => [...ss, { id: makeId(), name: "New section", color: "teal", tasks: [] }]);
   const removeSection = (id: string) => setSections((ss) => ss.filter((s) => s.id !== id));
 
-  const addTask = (sid: string) =>
-    patchSection(sid, (s) => ({ ...s, tasks: [...s.tasks, newTask()] }));
+  const addTask = (sid: string) => patchSection(sid, (s) => ({ ...s, tasks: [...s.tasks, newTask()] }));
   const patchTask = (sid: string, tid: string, fields: Partial<Task>) =>
     patchSection(sid, (s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === tid ? { ...t, ...fields } : t)) }));
   const removeTask = (sid: string, tid: string) =>
@@ -64,25 +59,22 @@ export default function YearlyTracker() {
   const inProgress = all.filter((t) => t.status === "In Progress").length;
 
   return (
-    <div className="mx-auto max-w-6xl p-4">
+    <div className="mx-auto max-w-5xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">
-          Annual once-a-year tasks. {done} done · {inProgress} in progress · {all.length} total.
-          Click a heading to rename it.
+          Annual tasks. {done} done · {inProgress} in progress · {all.length} total. Click any heading or task to rename it.
         </p>
-        <button onClick={addSection} className="pill shrink-0" style={{ background: BRAND.blue.base }}>
+        <button onClick={addSection} className="pill shrink-0" style={{ background: BRAND.pink.base }}>
           + Add section
         </button>
       </div>
       <div className="scroll-x overflow-hidden rounded-xl bg-white shadow">
-        <table className="w-full min-w-[820px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
-            <tr className="text-white" style={{ background: BRAND.blue.base }}>
+            <tr className="text-white" style={{ background: BRAND.pink.base }}>
               <th className="w-10 px-2 py-2 text-left font-bold">#</th>
               <th className="px-3 py-2 text-left font-bold">Task</th>
               <th className="w-32 px-2 py-2 text-left font-bold">Done</th>
-              <th className="w-36 px-2 py-2 text-left font-bold">Date completed</th>
-              <th className="w-40 px-2 py-2 text-left font-bold">Responsible</th>
               <th className="px-2 py-2 text-left font-bold">Notes</th>
               <th className="w-10" />
             </tr>
@@ -91,12 +83,12 @@ export default function YearlyTracker() {
             {sections.map((section) => (
               <Fragment key={section.id}>
                 <tr>
-                  <td colSpan={7} className="px-3 py-1.5 text-white" style={{ background: BRAND[section.color].base }}>
+                  <td colSpan={5} className="px-3 py-1.5 text-white" style={{ background: BRAND[section.color].base }}>
                     <div className="flex items-center gap-2">
                       <input
                         value={section.name}
                         onChange={(e) => renameSection(section.id, e.target.value)}
-                        className="flex-1 bg-transparent text-xs font-extrabold uppercase tracking-wide text-white outline-none placeholder:text-white/60"
+                        className="flex-1 bg-transparent font-heading text-sm font-bold uppercase tracking-wide text-white outline-none placeholder:text-white/60"
                         placeholder="Section name…"
                       />
                       <select
@@ -109,13 +101,7 @@ export default function YearlyTracker() {
                           <option key={c} value={c} className="text-ink">{c}</option>
                         ))}
                       </select>
-                      <button
-                        onClick={() => removeSection(section.id)}
-                        className="text-white/80 hover:text-white"
-                        title="Delete section"
-                      >
-                        ✕
-                      </button>
+                      <button onClick={() => removeSection(section.id)} className="text-white/80 hover:text-white" title="Delete section">✕</button>
                     </div>
                   </td>
                 </tr>
@@ -123,65 +109,23 @@ export default function YearlyTracker() {
                   <tr key={task.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-2 py-1 text-center text-xs text-ink-soft">{i + 1}</td>
                     <td className="px-1 py-1">
-                      <input
-                        className="cell-input"
-                        value={task.name}
-                        placeholder="New task…"
-                        onChange={(e) => patchTask(section.id, task.id, { name: e.target.value })}
-                      />
+                      <input className="cell-input" value={task.name} placeholder="New task…" onChange={(e) => patchTask(section.id, task.id, { name: e.target.value })} />
                     </td>
                     <td className="px-1 py-1">
-                      <StatusSelect
-                        value={task.status}
-                        options={STATUS_OPTIONS}
-                        colors={STATUS_COLORS}
-                        onChange={(v) => patchTask(section.id, task.id, { status: v as Status })}
-                      />
+                      <StatusSelect value={task.status} options={STATUS_OPTIONS} colors={STATUS_COLORS} onChange={(v) => patchTask(section.id, task.id, { status: v as Status })} />
                     </td>
                     <td className="px-1 py-1">
-                      <input
-                        type="date"
-                        className="cell-input"
-                        value={task.dateCompleted}
-                        onChange={(e) => patchTask(section.id, task.id, { dateCompleted: e.target.value })}
-                      />
-                    </td>
-                    <td className="px-1 py-1">
-                      <input
-                        className="cell-input"
-                        value={task.responsible}
-                        placeholder="Who?"
-                        onChange={(e) => patchTask(section.id, task.id, { responsible: e.target.value })}
-                      />
-                    </td>
-                    <td className="px-1 py-1">
-                      <input
-                        className="cell-input"
-                        value={task.notes}
-                        placeholder="Notes…"
-                        onChange={(e) => patchTask(section.id, task.id, { notes: e.target.value })}
-                      />
+                      <input className="cell-input" value={task.notes} placeholder="Notes…" onChange={(e) => patchTask(section.id, task.id, { notes: e.target.value })} />
                     </td>
                     <td className="px-1 text-center">
-                      <button
-                        onClick={() => removeTask(section.id, task.id)}
-                        className="text-ink-soft/50 hover:text-pink"
-                        title="Delete row"
-                      >
-                        ✕
-                      </button>
+                      <button onClick={() => removeTask(section.id, task.id)} className="text-ink-soft/50 hover:text-pink" title="Delete row">✕</button>
                     </td>
                   </tr>
                 ))}
                 <tr>
                   <td />
-                  <td colSpan={6} className="px-1 py-1">
-                    <button
-                      onClick={() => addTask(section.id)}
-                      className="text-xs font-bold text-ink-soft hover:text-blue"
-                    >
-                      + Add task
-                    </button>
+                  <td colSpan={4} className="px-1 py-1">
+                    <button onClick={() => addTask(section.id)} className="text-xs font-bold text-ink-soft hover:text-pink">+ Add task</button>
                   </td>
                 </tr>
               </Fragment>

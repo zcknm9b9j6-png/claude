@@ -1,6 +1,7 @@
 // Brand colour tokens, kept in one place so components can reference them by
 // name. Hex values mirror tailwind.config.js for use in inline styles / SVG.
-export type BrandColor = "teal" | "purple" | "orange" | "lime" | "pink" | "blue";
+// ONLY these five Fair Play OOSH brand colours are approved.
+export type BrandColor = "teal" | "purple" | "orange" | "lime" | "pink";
 
 export interface ColorTriple {
   base: string;
@@ -14,10 +15,11 @@ export const BRAND: Record<BrandColor, ColorTriple> = {
   orange: { base: "#F06414", tint: "#FDECE2", shade: "#D8531A" },
   lime: { base: "#A0C828", tint: "#F1F7E1", shade: "#87AE29" },
   pink: { base: "#DC008C", tint: "#FDE6F3", shade: "#C80077" },
-  blue: { base: "#2D7DD2", tint: "#E8F1FB", shade: "#2468B2" },
 };
 
 export const INK = "#1C1533";
+
+export const COLOR_CHOICES: BrandColor[] = ["teal", "purple", "pink", "lime", "orange"];
 
 // Tailwind class helpers keyed by brand colour, so components can switch theme
 // without string interpolation (which Tailwind's JIT can't see).
@@ -27,7 +29,6 @@ export const BG: Record<BrandColor, string> = {
   orange: "bg-orange",
   lime: "bg-lime",
   pink: "bg-pink",
-  blue: "bg-blue",
 };
 
 export const TEXT: Record<BrandColor, string> = {
@@ -36,7 +37,6 @@ export const TEXT: Record<BrandColor, string> = {
   orange: "text-orange",
   lime: "text-lime",
   pink: "text-pink",
-  blue: "text-blue",
 };
 
 export const TINT_BG: Record<BrandColor, string> = {
@@ -45,5 +45,4 @@ export const TINT_BG: Record<BrandColor, string> = {
   orange: "bg-orange-tint",
   lime: "bg-lime-tint",
   pink: "bg-pink-tint",
-  blue: "bg-blue-tint",
 };

@@ -20,6 +20,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3, h4, .font-heading {
+  font-family: theme("fontFamily.heading");
+}
+
 /* Thin, branded scrollbars for the wide tracker grids. */
 .scroll-x {
   overflow-x: auto;
@@ -34,7 +38,6 @@ body {
 }
 
 @layer components {
-  /* Pill buttons used across trackers (Enrol Now / Book a Tour style). */
   .pill {
     @apply inline-flex items-center justify-center rounded-full px-4 py-1.5 text-sm font-bold text-white transition-colors;
   }
