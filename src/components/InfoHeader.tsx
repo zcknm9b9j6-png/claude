@@ -1,13 +1,6 @@
-import { useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
-import {
-  formatLong,
-  type TermConfig,
-  termStatus,
-} from "../lib/terms";
 
 interface Props {
-  config: TermConfig;
   title: string;
   subtitle: string;
   color: BrandColor;
@@ -15,69 +8,93 @@ interface Props {
   onOpenBackup: () => void;
 }
 
-/**
- * Brand logo. Tries an uploaded raster `logo.png` first (drop one in /public to
- * override), falls back to the hand-built vector `logo.svg`, then to a text
- * wordmark if neither asset is present.
- */
-const LOGO_SOURCES = ["logo.png", "logo.svg"];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
+const QUOTES = [
+  "Small daily improvements lead to stunning results.",
+  "You don't have to be perfect to make a difference.",
+  "Great educators plant seeds that grow forever.",
+  "Progress, not perfection.",
+  "The way to get started is to quit talking and begin doing.",
+  "Every child you teach is a future you shape.",
+  "Done is better than perfect — keep moving.",
+  "Your calm is contagious. Lead with it.",
+  "Big things are built one small task at a time.",
+  "Believe you can and you're halfway there.",
+  "What you do today can improve all your tomorrows.",
+  "Strong roots make strong leaders.",
+  "Be the reason someone feels welcomed today.",
+  "Organisation is the foundation of calm.",
+  "You are capable of amazing things.",
+];
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function prettyDate(d: Date): string {
+  return `${ordinal(d.getDate())} of ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function greeting(d: Date): string {
+  const h = d.getHours();
+  if (h < 12) return "Good morning, Aimee";
+  if (h < 17) return "Good afternoon, Aimee";
+  return "Welcome back, Aimee";
+}
+
+function quoteOfTheDay(d: Date): string {
+  const start = new Date(d.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((d.getTime() - start.getTime()) / 86_400_000);
+  return QUOTES[dayOfYear % QUOTES.length];
+}
+
+/** Logo with graceful fallback: logo.png → logo.svg → wordmark. */
 function Logo() {
-  const [idx, setIdx] = useState(0);
-  if (idx >= LOGO_SOURCES.length) {
-    return (
-      <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-extrabold">
-        FAIR PLAY OOSH
-      </span>
-    );
-  }
   return (
     <img
-      src={LOGO_SOURCES[idx]}
+      src="logo.png"
       alt="Fair Play OOSH"
-      onError={() => setIdx((i) => i + 1)}
-      className="h-9 w-auto rounded bg-white/90 p-0.5"
+      className="h-12 w-auto rounded-lg bg-white/90 p-1 animate-logo-in"
     />
   );
 }
 
 /**
- * The sticky info header that sits above every tracker — mirrors rows 1–6 of
- * each Excel sheet: brand banner, sheet title, and the four auto-updating
- * YEAR / CURRENT TERM / WEEK OF TERM / DAY OF TERM boxes.
+ * Sticky header: brand banner with greeting, today's date, an inspirational
+ * quote of the day, and the active-view title band coloured by tab.
  */
 export default function InfoHeader({
-  config,
   title,
   subtitle,
   color,
   onOpenSettings,
   onOpenBackup,
 }: Props) {
-  const status = termStatus(config);
-  const today = new Date();
-
-  const boxes = [
-    { label: "Year", value: String(config.year) },
-    { label: "Current Term", value: status.term ? status.term.label : "Outside term" },
-    { label: "Week of Term", value: status.week ? String(status.week) : "—" },
-    { label: "Day of Term", value: status.day ? String(status.day) : "—" },
-  ];
+  const now = new Date();
 
   return (
     <header className="sticky top-0 z-20 shadow-sm">
-      {/* Row 1: brand banner */}
+      {/* Row 1: brand banner with greeting */}
       <div
-        className="flex items-center justify-between px-5 py-2 text-white"
+        className="flex items-center gap-3 px-5 py-2 text-white"
         style={{ background: BRAND.teal.base }}
       >
-        <div className="flex items-center gap-2 font-extrabold tracking-tight">
-          <Logo />
-          <span className="hidden text-sm font-semibold sm:inline">
-            Out of School Hours Care · Newcastle &amp; Hunter
-          </span>
+        <Logo />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-base font-extrabold leading-tight">
+            {greeting(now)} 👋
+          </div>
+          <div className="text-xs font-medium text-white/85">
+            {prettyDate(now)} · Updating daily
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             onClick={onOpenBackup}
             className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30"
@@ -93,33 +110,18 @@ export default function InfoHeader({
         </div>
       </div>
 
-      {/* Row 2: sheet title, coloured by active tab */}
+      {/* Row 2: quote of the day */}
+      <div className="bg-white px-5 py-1.5 text-center text-[13px] italic text-ink-soft">
+        “{quoteOfTheDay(now)}”
+      </div>
+
+      {/* Row 3: active view title, coloured by tab */}
       <div
         className="flex items-baseline gap-3 px-5 py-2 text-white"
         style={{ background: BRAND[color].base }}
       >
         <h1 className="text-lg font-extrabold leading-none">{title}</h1>
         <span className="text-xs font-medium text-white/80">{subtitle}</span>
-      </div>
-
-      {/* Rows 4–5: the four auto-updating info boxes */}
-      <div className="grid grid-cols-2 gap-px bg-gray-200 sm:grid-cols-4">
-        {boxes.map((b, i) => (
-          <div
-            key={b.label}
-            className="bg-white px-4 py-2"
-            style={{ borderTop: `3px solid ${Object.values(BRAND)[i].base}` }}
-          >
-            <div className="text-[10px] font-bold uppercase tracking-wide text-ink-soft">
-              {b.label}
-            </div>
-            <div className="text-base font-extrabold text-ink">{b.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white px-5 py-1 text-right text-[11px] text-ink-soft">
-        Today · {formatLong(today)}
       </div>
     </header>
   );

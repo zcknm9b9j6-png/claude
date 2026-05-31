@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { BRAND, type BrandColor } from "../brand";
 import { DoneToggle } from "../components/controls";
 import { makeId, usePersistentState } from "../lib/storage";
@@ -6,6 +7,7 @@ import {
   type Term,
   type TermConfig,
   type TermId,
+  termStatus,
   weeksInTerm,
   weekStartDate,
 } from "../lib/terms";
@@ -20,7 +22,7 @@ type Data = Record<TermId, Task[]>;
 const TERM_COLORS: Record<TermId, BrandColor> = {
   1: "teal",
   2: "purple",
-  3: "orange",
+  3: "blue",
   4: "pink",
 };
 
@@ -35,47 +37,71 @@ function seed(): Data {
 export default function WeeklyTracker({ config }: { config: TermConfig }) {
   const [data, setData] = usePersistentState<Data>("weekly", seed);
   const maxWeeks = Math.max(...config.terms.map(weeksInTerm));
+  const status = termStatus(config);
+  const currentRef = useRef<HTMLDivElement>(null);
 
   const update = (term: TermId, fn: (tasks: Task[]) => Task[]) =>
     setData((d) => ({ ...d, [term]: fn(d[term] ?? []) }));
 
   return (
     <div className="mx-auto max-w-6xl p-4">
-      <p className="mb-3 text-sm text-ink-soft">
-        Recurring weekly tasks per term. Tick a week when it's done — weeks
-        outside a term are greyed out.
-      </p>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-ink-soft">
+          Recurring weekly tasks per term. Tick a week when it's done.
+        </p>
+        <button
+          onClick={() => currentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="pill shrink-0"
+          style={{ background: BRAND.teal.base }}
+        >
+          ↓ Jump to this week
+        </button>
+      </div>
+
+      {status.term ? (
+        <p className="mb-3 rounded-lg px-3 py-2 text-sm font-bold text-white"
+           style={{ background: BRAND[TERM_COLORS[status.term.id]].base }}>
+          You're in {status.term.label}, Week {status.week}.
+        </p>
+      ) : (
+        <p className="mb-3 rounded-lg bg-gray-100 px-3 py-2 text-sm text-ink-soft">
+          Currently outside school term.
+        </p>
+      )}
+
       <div className="space-y-6">
-        {config.terms.map((term) => (
-          <TermBlock
-            key={term.id}
-            term={term}
-            color={TERM_COLORS[term.id]}
-            maxWeeks={maxWeeks}
-            tasks={data[term.id] ?? []}
-            onToggle={(id, wk) =>
-              update(term.id, (tasks) =>
-                tasks.map((t) =>
-                  t.id === id ? { ...t, done: { ...t.done, [wk]: !t.done[wk] } } : t,
-                ),
-              )
-            }
-            onRename={(id, name) =>
-              update(term.id, (tasks) =>
-                tasks.map((t) => (t.id === id ? { ...t, name } : t)),
-              )
-            }
-            onAdd={() =>
-              update(term.id, (tasks) => [
-                ...tasks,
-                { id: makeId(), name: "", done: {} },
-              ])
-            }
-            onRemove={(id) =>
-              update(term.id, (tasks) => tasks.filter((t) => t.id !== id))
-            }
-          />
-        ))}
+        {config.terms.map((term) => {
+          const isCurrent = status.term?.id === term.id;
+          return (
+            <div key={term.id} ref={isCurrent ? currentRef : undefined}>
+              <TermBlock
+                term={term}
+                color={TERM_COLORS[term.id]}
+                maxWeeks={maxWeeks}
+                currentWeek={isCurrent ? status.week : null}
+                tasks={data[term.id] ?? []}
+                onToggle={(id, wk) =>
+                  update(term.id, (tasks) =>
+                    tasks.map((t) =>
+                      t.id === id ? { ...t, done: { ...t.done, [wk]: !t.done[wk] } } : t,
+                    ),
+                  )
+                }
+                onRename={(id, name) =>
+                  update(term.id, (tasks) =>
+                    tasks.map((t) => (t.id === id ? { ...t, name } : t)),
+                  )
+                }
+                onAdd={() =>
+                  update(term.id, (tasks) => [...tasks, { id: makeId(), name: "", done: {} }])
+                }
+                onRemove={(id) =>
+                  update(term.id, (tasks) => tasks.filter((t) => t.id !== id))
+                }
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -85,6 +111,7 @@ interface BlockProps {
   term: Term;
   color: BrandColor;
   maxWeeks: number;
+  currentWeek: number | null;
   tasks: Task[];
   onToggle: (id: string, week: number) => void;
   onRename: (id: string, name: string) => void;
@@ -96,6 +123,7 @@ function TermBlock({
   term,
   color,
   maxWeeks,
+  currentWeek,
   tasks,
   onToggle,
   onRename,
@@ -120,13 +148,18 @@ function TermBlock({
             </th>
             {weeks.map((wk) => {
               const out = wk > termWeeks;
+              const isNow = wk === currentWeek;
               return (
                 <th
                   key={wk}
                   className="min-w-[56px] px-1 py-1 text-center text-[11px] font-bold"
-                  style={{ opacity: out ? 0.35 : 1 }}
+                  style={{
+                    opacity: out ? 0.35 : 1,
+                    background: isNow ? BRAND[color].shade : undefined,
+                    outline: isNow ? "2px solid #fff" : undefined,
+                  }}
                 >
-                  <div>Wk {wk}</div>
+                  <div>Wk {wk}{isNow ? " •" : ""}</div>
                   {!out && (
                     <div className="font-normal opacity-90">
                       {formatShort(weekStartDate(term, wk)).replace(/^\w+,?\s?/, "")}
@@ -163,13 +196,10 @@ function TermBlock({
                   <td
                     key={wk}
                     className="px-1 py-1"
-                    style={{ background: out ? "#f3f3f5" : undefined }}
+                    style={{ background: out ? "#f3f3f5" : wk === currentWeek ? BRAND[color].tint : undefined }}
                   >
                     {!out && (
-                      <DoneToggle
-                        done={!!task.done[wk]}
-                        onToggle={() => onToggle(task.id, wk)}
-                      />
+                      <DoneToggle done={!!task.done[wk]} onToggle={() => onToggle(task.id, wk)} />
                     )}
                   </td>
                 );
@@ -180,7 +210,7 @@ function TermBlock({
             <td className="sticky left-0 z-10 bg-white px-3 py-1">
               <button
                 onClick={onAdd}
-                className="text-xs font-bold text-ink-soft hover:text-ink"
+                className="text-xs font-bold"
                 style={{ color: BRAND[color].shade }}
               >
                 + Add task

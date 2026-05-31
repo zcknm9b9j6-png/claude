@@ -10,18 +10,22 @@ import ProjectTracker from "./trackers/ProjectTracker";
 import TermTracker from "./trackers/TermTracker";
 import WeeklyTracker from "./trackers/WeeklyTracker";
 import YearlyTracker from "./trackers/YearlyTracker";
+import ResourcesView from "./trackers/ResourcesView";
+import QuickNotesView from "./trackers/QuickNotesView";
 
 const TABS: (TabDef & { title: string; subtitle: string })[] = [
   { key: "weekly", label: "Weekly", color: "teal", title: "Weekly Tracker", subtitle: "Recurring tasks per week" },
   { key: "term", label: "Term", color: "purple", title: "Term Tracker", subtitle: "Recurring tasks each term" },
-  { key: "yearly", label: "Yearly", color: "orange", title: "Yearly Tracker", subtitle: "Annual tasks" },
+  { key: "yearly", label: "Yearly", color: "blue", title: "Yearly Tracker", subtitle: "Annual tasks" },
   { key: "project", label: "Projects", color: "lime", title: "Project Tracker", subtitle: "One-off initiatives" },
   { key: "calendar", label: "Calendar", color: "pink", title: "Custom Calendar", subtitle: "Events & reminders" },
+  { key: "resources", label: "Resources", color: "blue", title: "Resources", subtitle: "Passwords, links & templates" },
+  { key: "notes", label: "Quick Notes", color: "pink", title: "Quick Notes", subtitle: "Jot & review notes" },
 ];
 
 export default function App() {
   const [config, setConfig] = usePersistentState<TermConfig>("config", DEFAULT_CONFIG);
-  const [active, setActive] = useState("weekly");
+  const [active, setActive] = usePersistentState<string>("active-tab", "weekly");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
 
@@ -30,7 +34,6 @@ export default function App() {
   return (
     <div className="min-h-full">
       <InfoHeader
-        config={config}
         title={tab.title}
         subtitle={tab.subtitle}
         color={tab.color}
@@ -39,18 +42,15 @@ export default function App() {
       />
       <Tabs tabs={TABS} active={active} onChange={setActive} />
 
-      <main className="pb-16">
+      <main key={active} className="animate-fade-in pb-16">
         {active === "weekly" && <WeeklyTracker config={config} />}
         {active === "term" && <TermTracker config={config} />}
         {active === "yearly" && <YearlyTracker />}
         {active === "project" && <ProjectTracker />}
         {active === "calendar" && <CalendarView config={config} />}
+        {active === "resources" && <ResourcesView />}
+        {active === "notes" && <QuickNotesView />}
       </main>
-
-      <footer className="px-5 py-3 text-center text-xs text-ink-soft">
-        Fair Play OOSH · Newcastle &amp; Hunter · fairplayoosh.com.au — data saved in
-        this browser. Use <strong>Backup</strong> to move it between devices.
-      </footer>
 
       {settingsOpen && (
         <SettingsModal

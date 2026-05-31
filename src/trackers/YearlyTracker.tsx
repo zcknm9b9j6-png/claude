@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { BRAND } from "../brand";
+import { BRAND, type BrandColor } from "../brand";
 import { StatusSelect } from "../components/controls";
 import { YEARLY_SECTIONS, YEARLY_TASKS } from "../data/seed";
 import { makeId, usePersistentState } from "../lib/storage";
@@ -14,55 +14,70 @@ interface Task {
   responsible: string;
   notes: string;
 }
-type Data = Record<string, Task[]>;
+interface Section {
+  id: string;
+  name: string;
+  color: BrandColor;
+  tasks: Task[];
+}
 
 const STATUS_OPTIONS: Status[] = ["—", "In Progress", "Done"];
 const STATUS_COLORS: Record<string, string> = {
   Done: BRAND.lime.base,
-  "In Progress": "#F0A814", // amber
+  "In Progress": "#F0A814",
   "—": "transparent",
 };
+const COLOR_CHOICES: BrandColor[] = ["teal", "purple", "blue", "pink", "lime", "orange"];
 
-function seed(): Data {
-  const d: Data = {};
-  for (const s of YEARLY_SECTIONS) {
-    d[s.name] = (YEARLY_TASKS[s.name] ?? []).map((name) => ({
-      id: makeId(),
-      name,
-      status: "—" as Status,
-      dateCompleted: "",
-      responsible: "",
-      notes: "",
-    }));
-  }
-  return d;
+function newTask(): Task {
+  return { id: makeId(), name: "", status: "—", dateCompleted: "", responsible: "", notes: "" };
+}
+
+function seed(): Section[] {
+  return YEARLY_SECTIONS.map((s) => ({
+    id: makeId(),
+    name: s.name,
+    color: s.color,
+    tasks: (YEARLY_TASKS[s.name] ?? []).map((name) => ({ ...newTask(), name })),
+  }));
 }
 
 export default function YearlyTracker() {
-  const [data, setData] = usePersistentState<Data>("yearly", seed);
+  const [sections, setSections] = usePersistentState<Section[]>("yearly-sections", seed);
 
-  const update = (section: string, fn: (tasks: Task[]) => Task[]) =>
-    setData((d) => ({ ...d, [section]: fn(d[section] ?? []) }));
+  const patchSection = (id: string, fn: (s: Section) => Section) =>
+    setSections((ss) => ss.map((s) => (s.id === id ? fn(s) : s)));
+  const renameSection = (id: string, name: string) => patchSection(id, (s) => ({ ...s, name }));
+  const addSection = () =>
+    setSections((ss) => [...ss, { id: makeId(), name: "New section", color: "blue", tasks: [] }]);
+  const removeSection = (id: string) => setSections((ss) => ss.filter((s) => s.id !== id));
 
-  const patch = (section: string, id: string, fields: Partial<Task>) =>
-    update(section, (tasks) =>
-      tasks.map((t) => (t.id === id ? { ...t, ...fields } : t)),
-    );
+  const addTask = (sid: string) =>
+    patchSection(sid, (s) => ({ ...s, tasks: [...s.tasks, newTask()] }));
+  const patchTask = (sid: string, tid: string, fields: Partial<Task>) =>
+    patchSection(sid, (s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === tid ? { ...t, ...fields } : t)) }));
+  const removeTask = (sid: string, tid: string) =>
+    patchSection(sid, (s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== tid) }));
 
-  const all = Object.values(data).flat();
+  const all = sections.flatMap((s) => s.tasks);
   const done = all.filter((t) => t.status === "Done").length;
   const inProgress = all.filter((t) => t.status === "In Progress").length;
 
   return (
     <div className="mx-auto max-w-6xl p-4">
-      <p className="mb-3 text-sm text-ink-soft">
-        Annual once-a-year tasks. {done} done · {inProgress} in progress ·{" "}
-        {all.length} total.
-      </p>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-ink-soft">
+          Annual once-a-year tasks. {done} done · {inProgress} in progress · {all.length} total.
+          Click a heading to rename it.
+        </p>
+        <button onClick={addSection} className="pill shrink-0" style={{ background: BRAND.blue.base }}>
+          + Add section
+        </button>
+      </div>
       <div className="scroll-x overflow-hidden rounded-xl bg-white shadow">
         <table className="w-full min-w-[820px] border-collapse text-sm">
           <thead>
-            <tr className="text-white" style={{ background: BRAND.orange.base }}>
+            <tr className="text-white" style={{ background: BRAND.blue.base }}>
               <th className="w-10 px-2 py-2 text-left font-bold">#</th>
               <th className="px-3 py-2 text-left font-bold">Task</th>
               <th className="w-32 px-2 py-2 text-left font-bold">Done</th>
@@ -73,105 +88,104 @@ export default function YearlyTracker() {
             </tr>
           </thead>
           <tbody>
-            {YEARLY_SECTIONS.map((section) => {
-              const tasks = data[section.name] ?? [];
-              return (
-                <Fragment key={section.name}>
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-white"
-                      style={{ background: BRAND[section.color].base }}
-                    >
-                      {section.name}
-                    </td>
-                  </tr>
-                  {tasks.map((task, i) => (
-                    <tr key={task.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-2 py-1 text-center text-xs text-ink-soft">{i + 1}</td>
-                      <td className="px-1 py-1">
-                        <input
-                          className="cell-input"
-                          value={task.name}
-                          placeholder="New task…"
-                          onChange={(e) => patch(section.name, task.id, { name: e.target.value })}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <StatusSelect
-                          value={task.status}
-                          options={STATUS_OPTIONS}
-                          colors={STATUS_COLORS}
-                          onChange={(v) => patch(section.name, task.id, { status: v as Status })}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <input
-                          type="date"
-                          className="cell-input"
-                          value={task.dateCompleted}
-                          onChange={(e) =>
-                            patch(section.name, task.id, { dateCompleted: e.target.value })
-                          }
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <input
-                          className="cell-input"
-                          value={task.responsible}
-                          placeholder="Who?"
-                          onChange={(e) =>
-                            patch(section.name, task.id, { responsible: e.target.value })
-                          }
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <input
-                          className="cell-input"
-                          value={task.notes}
-                          placeholder="Notes…"
-                          onChange={(e) => patch(section.name, task.id, { notes: e.target.value })}
-                        />
-                      </td>
-                      <td className="px-1 text-center">
-                        <button
-                          onClick={() =>
-                            update(section.name, (ts) => ts.filter((t) => t.id !== task.id))
-                          }
-                          className="text-ink-soft/50 hover:text-pink"
-                          title="Delete row"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td />
-                    <td colSpan={6} className="px-1 py-1">
-                      <button
-                        onClick={() =>
-                          update(section.name, (ts) => [
-                            ...ts,
-                            {
-                              id: makeId(),
-                              name: "",
-                              status: "—",
-                              dateCompleted: "",
-                              responsible: "",
-                              notes: "",
-                            },
-                          ])
-                        }
-                        className="text-xs font-bold text-ink-soft hover:text-orange"
+            {sections.map((section) => (
+              <Fragment key={section.id}>
+                <tr>
+                  <td colSpan={7} className="px-3 py-1.5 text-white" style={{ background: BRAND[section.color].base }}>
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={section.name}
+                        onChange={(e) => renameSection(section.id, e.target.value)}
+                        className="flex-1 bg-transparent text-xs font-extrabold uppercase tracking-wide text-white outline-none placeholder:text-white/60"
+                        placeholder="Section name…"
+                      />
+                      <select
+                        value={section.color}
+                        onChange={(e) => patchSection(section.id, (s) => ({ ...s, color: e.target.value as BrandColor }))}
+                        className="rounded bg-white/20 px-1 py-0.5 text-[10px] font-bold text-white outline-none"
+                        title="Section colour"
                       >
-                        + Add task
+                        {COLOR_CHOICES.map((c) => (
+                          <option key={c} value={c} className="text-ink">{c}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => removeSection(section.id)}
+                        className="text-white/80 hover:text-white"
+                        title="Delete section"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {section.tasks.map((task, i) => (
+                  <tr key={task.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-2 py-1 text-center text-xs text-ink-soft">{i + 1}</td>
+                    <td className="px-1 py-1">
+                      <input
+                        className="cell-input"
+                        value={task.name}
+                        placeholder="New task…"
+                        onChange={(e) => patchTask(section.id, task.id, { name: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <StatusSelect
+                        value={task.status}
+                        options={STATUS_OPTIONS}
+                        colors={STATUS_COLORS}
+                        onChange={(v) => patchTask(section.id, task.id, { status: v as Status })}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        type="date"
+                        className="cell-input"
+                        value={task.dateCompleted}
+                        onChange={(e) => patchTask(section.id, task.id, { dateCompleted: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        className="cell-input"
+                        value={task.responsible}
+                        placeholder="Who?"
+                        onChange={(e) => patchTask(section.id, task.id, { responsible: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        className="cell-input"
+                        value={task.notes}
+                        placeholder="Notes…"
+                        onChange={(e) => patchTask(section.id, task.id, { notes: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-1 text-center">
+                      <button
+                        onClick={() => removeTask(section.id, task.id)}
+                        className="text-ink-soft/50 hover:text-pink"
+                        title="Delete row"
+                      >
+                        ✕
                       </button>
                     </td>
                   </tr>
-                </Fragment>
-              );
-            })}
+                ))}
+                <tr>
+                  <td />
+                  <td colSpan={6} className="px-1 py-1">
+                    <button
+                      onClick={() => addTask(section.id)}
+                      className="text-xs font-bold text-ink-soft hover:text-blue"
+                    >
+                      + Add task
+                    </button>
+                  </td>
+                </tr>
+              </Fragment>
+            ))}
           </tbody>
         </table>
       </div>
