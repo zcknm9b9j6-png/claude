@@ -65,22 +65,25 @@ export default function QuickNotesView() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-start justify-center overflow-y-auto bg-black/40 p-4" onClick={() => setOpenId(null)}>
-          <div className="my-8 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center gap-2">
-              <input value={open.title} placeholder="Note title…" onChange={(e) => patch(open.id, { title: e.target.value })} className="flex-1 bg-transparent font-heading text-lg font-bold text-ink outline-none" />
-              <button onClick={() => setOpenId(null)} className="text-ink-soft hover:text-ink">✕</button>
-            </div>
-            <div className="mb-3 flex items-center gap-2 text-sm">
-              <span className="text-ink-soft">Category:</span>
-              <CategorySelect value={open.category} categories={cats} onChange={(v) => patch(open.id, { category: v })} onAddCategory={addCat} />
-            </div>
-            <textarea value={open.body} placeholder="Start typing…" rows={14} onChange={(e) => patch(open.id, { body: e.target.value })} className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-orange" />
-            <div className="mt-4 flex items-center justify-between">
-              <button onClick={() => remove(open.id)} className="text-sm font-bold text-ink-soft hover:text-pink">Delete note</button>
-              <span className="text-xs text-ink-soft/70">Saved automatically</span>
-            </div>
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+          <div className="flex items-center gap-2 border-b px-4 py-3" style={{ background: BRAND.orange.tint }}>
+            <button onClick={() => setOpenId(null)} className="rounded-full bg-white px-3 py-1 text-sm font-bold text-ink-soft hover:bg-gray-100">← Back</button>
+            <input value={open.title} placeholder="Note title…" onChange={(e) => patch(open.id, { title: e.target.value })} className="flex-1 bg-transparent font-heading text-lg font-bold text-ink outline-none" />
+            <button onClick={() => remove(open.id)} className="text-sm font-bold text-ink-soft hover:text-pink">Delete</button>
           </div>
+          <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
+            <span className="text-ink-soft">Category:</span>
+            <CategorySelect value={open.category} categories={cats} onChange={(v) => patch(open.id, { category: v })} onAddCategory={addCat} />
+            <span className="flex-1" />
+            <span className="text-xs text-ink-soft/70">Saved automatically</span>
+          </div>
+          <textarea
+            value={open.body}
+            placeholder="Start typing…"
+            autoFocus
+            onChange={(e) => patch(open.id, { body: e.target.value })}
+            className="flex-1 resize-none px-5 py-4 text-base outline-none"
+          />
         </div>
       )}
     </div>

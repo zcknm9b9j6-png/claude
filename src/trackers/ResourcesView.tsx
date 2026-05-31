@@ -3,8 +3,8 @@ import { BRAND, type BrandColor } from "../brand";
 import { makeId, usePersistentState } from "../lib/storage";
 import { CategorySelect, useCategories } from "../components/CategorySelect";
 
-interface Password { id: string; label: string; username: string; password: string; url: string }
-interface Link { id: string; title: string; url: string }
+interface Password { id: string; label: string; username: string; password: string; url: string; category: string }
+interface Link { id: string; title: string; url: string; category: string }
 interface StoredFile { id: string; name: string; category: string; fileName: string; dataUrl: string }
 
 type SectionKey = "passwords" | "links" | "files";
@@ -40,18 +40,34 @@ function Accordion({ title, color, isOpen, onToggle, children }: { title: string
   );
 }
 
+/** A "filter by category" dropdown shown at the top of each section. */
+function FilterBar({ filter, setFilter, categories }: { filter: string; setFilter: (v: string) => void; categories: string[] }) {
+  return (
+    <select value={filter} onChange={(e) => setFilter(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-1 text-sm outline-none">
+      <option value="">All categories</option>
+      {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+    </select>
+  );
+}
+
 function Passwords() {
   const [items, setItems] = usePersistentState<Password[]>("resources-passwords", []);
   const [show, setShow] = useState<Record<string, boolean>>({});
-  const add = () => setItems((xs) => [...xs, { id: makeId(), label: "", username: "", password: "", url: "" }]);
+  const [filter, setFilter] = useState("");
+  const { cats, add: addCat } = useCategories("res-passwords", ["Childcare systems", "Email", "Finance", "Government"]);
+  const add = () => setItems((xs) => [...xs, { id: makeId(), label: "", username: "", password: "", url: "", category: "" }]);
   const patch = (id: string, p: Partial<Password>) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...p } : x)));
+  const shown = items.filter((p) => !filter || p.category === filter);
 
   return (
     <>
-      <div className="mb-3"><AddBtn onClick={add} label="+ Add login" /></div>
-      {items.length === 0 && <Empty text="No saved logins yet." />}
+      <div className="mb-3 flex items-center gap-2">
+        <AddBtn onClick={add} label="+ Add login" />
+        <FilterBar filter={filter} setFilter={setFilter} categories={cats} />
+      </div>
+      {shown.length === 0 && <Empty text="Nothing here yet." />}
       <div className="space-y-3">
-        {items.map((p) => (
+        {shown.map((p) => (
           <div key={p.id} className="rounded-lg border border-gray-200 p-3">
             <div className="mb-2 flex items-center gap-2">
               <input value={p.label} placeholder="What is this for?" onChange={(e) => patch(p.id, { label: e.target.value })} className="flex-1 bg-transparent font-bold text-ink outline-none" />
@@ -64,6 +80,7 @@ function Passwords() {
                 <button onClick={() => setShow((s) => ({ ...s, [p.id]: !s[p.id] }))} className="rounded border border-gray-300 px-2 py-1 text-xs text-ink-soft">{show[p.id] ? "Hide" : "Show"}</button>
               </div>
               <input value={p.url} placeholder="Website (https://…)" onChange={(e) => patch(p.id, { url: e.target.value })} className="rounded border border-gray-300 px-2 py-1 text-sm outline-none sm:col-span-2" />
+              <div className="sm:col-span-2"><CategorySelect value={p.category} categories={cats} onChange={(v) => patch(p.id, { category: v })} onAddCategory={addCat} /></div>
             </div>
           </div>
         ))}
@@ -74,18 +91,25 @@ function Passwords() {
 
 function Links() {
   const [items, setItems] = usePersistentState<Link[]>("resources-links", []);
-  const add = () => setItems((xs) => [...xs, { id: makeId(), title: "", url: "" }]);
+  const [filter, setFilter] = useState("");
+  const { cats, add: addCat } = useCategories("res-links", ["Childcare systems", "Government", "Suppliers", "Training"]);
+  const add = () => setItems((xs) => [...xs, { id: makeId(), title: "", url: "", category: "" }]);
   const patch = (id: string, p: Partial<Link>) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...p } : x)));
+  const shown = items.filter((l) => !filter || l.category === filter);
 
   return (
     <>
-      <div className="mb-3"><AddBtn onClick={add} label="+ Add link" /></div>
-      {items.length === 0 && <Empty text="No links saved yet." />}
+      <div className="mb-3 flex items-center gap-2">
+        <AddBtn onClick={add} label="+ Add link" />
+        <FilterBar filter={filter} setFilter={setFilter} categories={cats} />
+      </div>
+      {shown.length === 0 && <Empty text="Nothing here yet." />}
       <div className="space-y-2">
-        {items.map((l) => (
-          <div key={l.id} className="flex items-center gap-2">
+        {shown.map((l) => (
+          <div key={l.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 p-2">
             <input value={l.title} placeholder="Title" onChange={(e) => patch(l.id, { title: e.target.value })} className="w-40 rounded border border-gray-300 px-2 py-1 text-sm outline-none" />
-            <input value={l.url} placeholder="https://…" onChange={(e) => patch(l.id, { url: e.target.value })} className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm outline-none" />
+            <input value={l.url} placeholder="https://…" onChange={(e) => patch(l.id, { url: e.target.value })} className="min-w-[140px] flex-1 rounded border border-gray-300 px-2 py-1 text-sm outline-none" />
+            <CategorySelect value={l.category} categories={cats} onChange={(v) => patch(l.id, { category: v })} onAddCategory={addCat} />
             {l.url && <a href={l.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-teal">Open ↗</a>}
             <DelBtn onClick={() => setItems((xs) => xs.filter((x) => x.id !== l.id))} />
           </div>
@@ -97,33 +121,38 @@ function Links() {
 
 function Files() {
   const [items, setItems] = usePersistentState<StoredFile[]>("resources-files", []);
-  const { cats, add: addCat } = useCategories("resources", ["Forms", "Policies", "Newsletters", "Rosters"]);
+  const [filter, setFilter] = useState("");
+  const { cats, add: addCat } = useCategories("res-files", ["Forms", "Policies", "Newsletters", "Rosters"]);
   const patch = (id: string, p: Partial<StoredFile>) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...p } : x)));
+  const shown = items.filter((f) => !filter || f.category === filter);
 
   const onUpload = (file?: File) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setItems((xs) => [...xs, { id: makeId(), name: file.name, category: "", fileName: file.name, dataUrl: String(reader.result) }]);
+    reader.onload = () => setItems((xs) => [...xs, { id: makeId(), name: file.name.replace(/\.[^.]+$/, ""), category: "", fileName: file.name, dataUrl: String(reader.result) }]);
     reader.readAsDataURL(file);
   };
 
   return (
     <>
-      <label className="mb-3 inline-block cursor-pointer rounded-full px-3 py-1.5 text-sm font-bold text-white" style={{ background: BRAND.orange.base }}>
-        + Upload file
-        <input type="file" className="hidden" onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ""; }} />
-      </label>
-      {items.length === 0 && <Empty text="No files saved yet." />}
+      <div className="mb-3 flex items-center gap-2">
+        <label className="inline-block cursor-pointer rounded-full px-3 py-1.5 text-sm font-bold text-white" style={{ background: BRAND.orange.base }}>
+          + Upload file
+          <input type="file" className="hidden" onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ""; }} />
+        </label>
+        <FilterBar filter={filter} setFilter={setFilter} categories={cats} />
+      </div>
+      {shown.length === 0 && <Empty text="Nothing here yet." />}
       <div className="space-y-2">
-        {items.map((f) => (
+        {shown.map((f) => (
           <div key={f.id} className="rounded-lg border border-gray-200 p-3">
             <div className="mb-2 flex items-center gap-2">
-              <input value={f.name} placeholder="Name this file…" onChange={(e) => patch(f.id, { name: e.target.value })} className="flex-1 bg-transparent font-bold text-ink outline-none" />
+              <input value={f.name} placeholder="Name this template/file…" onChange={(e) => patch(f.id, { name: e.target.value })} className="flex-1 bg-transparent font-bold text-ink outline-none" />
               <DelBtn onClick={() => setItems((xs) => xs.filter((x) => x.id !== f.id))} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <CategorySelect value={f.category} categories={cats} onChange={(v) => patch(f.id, { category: v })} onAddCategory={addCat} />
-              <a href={f.dataUrl} download={f.fileName} className="text-sm font-bold text-orange">Download ({f.fileName})</a>
+              <a href={f.dataUrl} download={f.fileName} className="text-sm font-bold text-orange">⬇ Download ({f.fileName})</a>
             </div>
           </div>
         ))}
