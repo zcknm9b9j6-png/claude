@@ -44,7 +44,7 @@ function quoteOfTheDay(d: Date): string {
   return QUOTES[dayOfYear % QUOTES.length];
 }
 
-/** Logo with graceful fallback: logo.svg → wordmark if it can't load. */
+/** Logo with graceful fallback: logo.png → wordmark if it can't load. */
 function Logo() {
   const [failed, setFailed] = useState(false);
   if (failed) {
@@ -56,7 +56,7 @@ function Logo() {
   }
   return (
     <img
-      src="./logo.svg"
+      src="./logo.png"
       alt="Fair Play OOSH"
       onError={() => setFailed(true)}
       className="h-14 w-auto rounded-lg bg-white p-1 shadow-sm animate-logo-in"
