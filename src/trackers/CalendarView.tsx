@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
 import { makeId, usePersistentState } from "../lib/storage";
 import { autoEventsForDate } from "../lib/holidays";
-import { formatLong, parseISO, termForDate, toISO, type TermConfig } from "../lib/terms";
+import { parseISO, termForDate, toISO, type TermConfig } from "../lib/terms";
 
 interface CalEvent {
   id: string;

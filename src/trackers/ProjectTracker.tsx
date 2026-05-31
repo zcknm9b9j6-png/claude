@@ -61,7 +61,7 @@ function seed(): Project[] {
 
 // Older saved projects may lack the notes/tasks fields — fill them in.
 function normalize(p: Project): Project {
-  return { notes: "", tasks: [], ...p };
+  return { ...p, notes: p.notes ?? "", tasks: p.tasks ?? [] };
 }
 
 export default function ProjectTracker() {
