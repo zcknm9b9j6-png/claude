@@ -127,15 +127,15 @@ export default function ProjectTracker() {
         ))}
       </div>
 
-      {/* Detail subscreen */}
+      {/* Detail subscreen — full-screen, header & footer pinned, middle scrolls */}
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-start justify-center overflow-y-auto bg-black/40 p-4" onClick={() => setOpenId(null)}>
-          <div className="my-8 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-start gap-2">
-              <input value={open.name} placeholder="Project name…" onChange={(e) => patch(open.id, { name: e.target.value })} className="flex-1 bg-transparent font-heading text-xl font-bold text-ink outline-none" />
-              <button onClick={() => setOpenId(null)} className="text-ink-soft hover:text-ink">✕</button>
-            </div>
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+          <div className="flex items-center gap-2 border-b px-4 py-3" style={{ background: BRAND.lime.tint }}>
+            <button onClick={() => setOpenId(null)} className="rounded-full bg-white px-3 py-1 text-sm font-bold text-ink-soft hover:bg-gray-100">← Back</button>
+            <input value={open.name} placeholder="Project name…" onChange={(e) => patch(open.id, { name: e.target.value })} className="flex-1 bg-transparent font-heading text-lg font-bold text-ink outline-none" />
+          </div>
 
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
               <label>
                 <span className="text-ink-soft">Category</span>
@@ -183,11 +183,11 @@ export default function ProjectTracker() {
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={() => { setRows((rs) => rs.filter((r) => r.id !== open.id)); setOpenId(null); }} className="text-sm font-bold text-ink-soft hover:text-pink">Delete project</button>
-              <button onClick={() => setOpenId(null)} className="pill" style={{ background: BRAND.lime.base }}>Done</button>
-            </div>
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <button onClick={() => { setRows((rs) => rs.filter((r) => r.id !== open.id)); setOpenId(null); }} className="text-sm font-bold text-ink-soft hover:text-pink">Delete project</button>
+            <button onClick={() => setOpenId(null)} className="pill" style={{ background: BRAND.lime.base }}>Done</button>
           </div>
         </div>
       )}

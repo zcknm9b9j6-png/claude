@@ -190,10 +190,12 @@ function EventEditor({ ev, onSave, onDelete, onClose }: { ev: CalEvent; onSave: 
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-start justify-center overflow-y-auto bg-black/40 p-4" onClick={onClose}>
-      <div className="my-8 w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="mb-4 font-heading text-lg font-bold" style={{ color: BRAND.pink.base }}>Event</h3>
-        <div className="space-y-3 text-sm">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white" onClick={onClose}>
+      <div className="flex h-full flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b px-4 py-3" style={{ background: BRAND.pink.tint }}>
+          <h3 className="font-heading text-lg font-bold" style={{ color: BRAND.pink.base }}>Event</h3>
+        </div>
+        <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm sm:p-6">
           <input value={draft.title} placeholder="Title" onChange={(e) => set({ title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-pink" />
           <div className="grid grid-cols-2 gap-3">
             <label className="text-xs text-ink-soft">Start date
@@ -233,7 +235,7 @@ function EventEditor({ ev, onSave, onDelete, onClose }: { ev: CalEvent; onSave: 
           </label>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
+        <div className="flex items-center justify-between border-t px-4 py-3">
           <button onClick={() => onDelete(draft.id)} className="text-sm font-bold text-ink-soft hover:text-pink">Delete</button>
           <div className="flex gap-2">
             <button onClick={onClose} className="rounded-full px-4 py-1.5 text-sm font-bold text-ink-soft hover:bg-gray-100">Cancel</button>
