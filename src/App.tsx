@@ -6,7 +6,6 @@ import SettingsModal from "./components/SettingsModal";
 import Tabs, { type TabDef } from "./components/Tabs";
 import { usePersistentState } from "./lib/storage";
 import { applyToLocal, getSyncCode, pullCloud, pushCloud } from "./lib/cloudSync";
-import { lockNow } from "./lib/lock";
 import { DEFAULT_CONFIG, type TermConfig } from "./lib/terms";
 import CalendarView from "./trackers/CalendarView";
 import ProjectTracker from "./trackers/ProjectTracker";
@@ -118,7 +117,7 @@ export default function App() {
         onOpenBackup={() => setBackupOpen(true)}
         onOpenSync={() => setSyncOpen(true)}
         onJumpToTerm={jumpToCurrentTerm}
-        onLock={() => { lockNow(); window.location.reload(); }}
+        onLock={() => { window.location.reload(); }}
         syncStatus={syncStatus}
       />
       <Tabs tabs={TABS} active={active} onChange={setActive} />
