@@ -17,50 +17,19 @@
       rel="stylesheet"
     />
     <style>
-      /* Opening splash — pure CSS, fades itself out (no plugin needed). */
+      /* Instant pastel placeholder painted before the bundle loads, so there's
+         no white flash. The React <Splash> renders its Lottie animation on top
+         of this same backer and removes this element once it mounts. */
       #splash {
         position: fixed;
         inset: 0;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
+        z-index: 9998;
         background: linear-gradient(135deg, #e9f9fb 0%, #fde6f3 100%);
-        animation: splash-out 0.6s ease forwards;
-        animation-delay: 1.7s;
-      }
-      #splash img {
-        width: 160px;
-        height: auto;
-        animation: splash-pop 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
-      #splash .splash-word {
-        font-family: "Fredoka", system-ui, sans-serif;
-        font-weight: 600;
-        color: #14b4c8;
-        letter-spacing: 0.5px;
-        opacity: 0;
-        animation: splash-fade 0.8s ease 0.5s both;
-      }
-      @keyframes splash-pop {
-        0% { opacity: 0; transform: scale(0.6) translateY(10px); }
-        60% { opacity: 1; transform: scale(1.05); }
-        100% { opacity: 1; transform: scale(1); }
-      }
-      @keyframes splash-fade { to { opacity: 1; } }
-      @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
-      @media (prefers-reduced-motion: reduce) {
-        #splash { animation-delay: 0.2s; }
-        #splash img, #splash .splash-word { animation: none; opacity: 1; }
       }
     </style>
   </head>
   <body>
-    <div id="splash">
-      <img src="./logo.png" alt="Fair Play OOSH" />
-    </div>
+    <div id="splash"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

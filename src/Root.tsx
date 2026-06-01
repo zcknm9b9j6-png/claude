@@ -1,6 +1,7 @@
 import { useState } from "react";
 import App from "./App";
 import AccessScreen from "./components/AccessScreen";
+import Splash from "./Splash";
 import { getSyncCode } from "./lib/cloudSync";
 
 /**
@@ -9,9 +10,20 @@ import { getSyncCode } from "./lib/cloudSync";
  * but the same code works on every device and loads their cloud data.
  */
 export default function Root() {
+  const [splashDone, setSplashDone] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
-  if (!unlocked) return <AccessScreen onUnlock={() => setUnlocked(true)} />;
-  // Ensure a code is present (defensive) before showing the app.
-  if (!getSyncCode()) return <AccessScreen onUnlock={() => setUnlocked(true)} />;
-  return <App />;
+
+  const unlockedView =
+    unlocked && getSyncCode() ? (
+      <App />
+    ) : (
+      <AccessScreen onUnlock={() => setUnlocked(true)} />
+    );
+
+  return (
+    <>
+      {!splashDone && <Splash onDone={() => setSplashDone(true)} />}
+      {unlockedView}
+    </>
+  );
 }
