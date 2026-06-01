@@ -11,6 +11,7 @@ interface Props {
   onOpenBackup: () => void;
   onOpenSync: () => void;
   onJumpToTerm: () => void;
+  onLock: () => void;
   syncStatus: "off" | "loading" | "synced" | "saving" | "error";
 }
 
@@ -82,6 +83,7 @@ export default function InfoHeader({
   onOpenBackup,
   onOpenSync,
   onJumpToTerm,
+  onLock,
   syncStatus,
 }: Props) {
   const now = new Date();
@@ -113,6 +115,9 @@ export default function InfoHeader({
           </button>
           <button onClick={onOpenSettings} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30">
             Term dates
+          </button>
+          <button onClick={onLock} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30" title="Lock now">
+            🔒
           </button>
         </div>
       </div>
