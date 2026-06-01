@@ -65,7 +65,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
       >
         <div ref={box} style={{ position: "absolute", width: 300, height: 300 }} />
         <img
-          src="/logo.png"
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt="Fair Play OOSH"
           style={{
             position: "absolute",
