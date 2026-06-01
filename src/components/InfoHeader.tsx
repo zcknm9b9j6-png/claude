@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
 import { formatLong, termStatus, type TermConfig } from "../lib/terms";
 import { useToday } from "../lib/useToday";
@@ -46,7 +46,22 @@ function greeting(d: Date): string {
   const h = d.getHours();
   if (h < 12) return "Good morning, Aimee";
   if (h < 17) return "Good afternoon, Aimee";
-  return "Welcome back, Aimee";
+  if (h < 21) return "Good evening, Aimee";
+  return "Working late, Aimee";
+}
+
+/**
+ * Live local clock for the greeting. `useToday` is date-only (midnight), so it
+ * can't tell morning from night — this ticks each minute to keep the greeting
+ * matching the actual time of day.
+ */
+function useClock(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
 function quoteOfTheDay(d: Date): string {
@@ -88,6 +103,7 @@ export default function InfoHeader({
   syncStatus,
 }: Props) {
   const now = useToday();
+  const clock = useClock();
   const status = termStatus(config, now);
 
   return (
@@ -97,7 +113,7 @@ export default function InfoHeader({
         <Logo />
         <div className="min-w-0 flex-1">
           <div className="truncate font-heading text-lg font-bold leading-tight">
-            {greeting(now)}
+            {greeting(clock)}
           </div>
           <div className="text-xs font-semibold text-white/90">
             {formatLong(now)}
