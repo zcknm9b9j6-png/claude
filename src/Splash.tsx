@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import lottie from "lottie-web";
 import splashData from "./assets-splash.json";
+// Inlined as a base64 data URI so the logo is embedded in the bundle and needs
+// no URL resolution — works on any host/subpath (GitHub Pages /claude/, etc.).
+import logoSrc from "./assets/logo.png?inline";
 
 /**
  * Opening splash. Plays a smooth, hand-built Lottie animation (five brand-colour
@@ -65,7 +68,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
       >
         <div ref={box} style={{ position: "absolute", width: 300, height: 300 }} />
         <img
-          src={`${import.meta.env.BASE_URL}logo.png`}
+          src={logoSrc}
           alt="Fair Play OOSH"
           style={{
             position: "absolute",
