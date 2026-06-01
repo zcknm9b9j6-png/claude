@@ -11,7 +11,16 @@ interface Props {
   onOpenBackup: () => void;
   onOpenSync: () => void;
   onJumpToTerm: () => void;
+  syncStatus: "off" | "loading" | "synced" | "saving" | "error";
 }
+
+const SYNC_LABEL: Record<Props["syncStatus"], string> = {
+  off: "☁ Cloud Sync",
+  loading: "☁ Loading…",
+  saving: "☁ Saving…",
+  synced: "☁ Synced ✓",
+  error: "☁ Sync error",
+};
 
 const QUOTES = [
   "Small daily improvements lead to stunning results.",
@@ -73,6 +82,7 @@ export default function InfoHeader({
   onOpenBackup,
   onOpenSync,
   onJumpToTerm,
+  syncStatus,
 }: Props) {
   const now = new Date();
   const status = termStatus(config);
@@ -91,8 +101,12 @@ export default function InfoHeader({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button onClick={onOpenSync} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-teal hover:bg-white/90">
-            ☁ Cloud Sync
+          <button
+            onClick={onOpenSync}
+            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-teal hover:bg-white/90"
+            style={syncStatus === "error" ? { color: BRAND.pink.base } : undefined}
+          >
+            {SYNC_LABEL[syncStatus]}
           </button>
           <button onClick={onOpenBackup} className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold hover:bg-white/30">
             Backup
