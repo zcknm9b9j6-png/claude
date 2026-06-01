@@ -87,11 +87,6 @@ export default function AccessScreen({ onUnlock }: { onUnlock: () => void }) {
             {busy ? "Opening…" : "Unlock"}
           </button>
         </form>
-
-        <p className="mt-4 text-center text-[11px] text-ink-soft/70">
-          First time? Pick any code you'll remember — that becomes your private key.
-          Keep it secret. For truly sensitive information, use a dedicated secure app.
-        </p>
       </div>
     </div>
   );
