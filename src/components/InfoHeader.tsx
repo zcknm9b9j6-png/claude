@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BRAND, type BrandColor } from "../brand";
 import { formatLong, termStatus, type TermConfig } from "../lib/terms";
+import { useToday } from "../lib/useToday";
 
 interface Props {
   config: TermConfig;
@@ -86,8 +87,8 @@ export default function InfoHeader({
   onLock,
   syncStatus,
 }: Props) {
-  const now = new Date();
-  const status = termStatus(config);
+  const now = useToday();
+  const status = termStatus(config, now);
 
   return (
     <header className="sticky top-0 z-20 shadow-sm">

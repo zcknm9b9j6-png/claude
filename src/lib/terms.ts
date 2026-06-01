@@ -66,15 +66,15 @@ export function networkDays(start: Date, end: Date): number {
 
 /** Number of week columns a term spans (1-based, inclusive of partial final week). */
 export function weeksInTerm(term: Term): number {
-  const span = dayDiff(parseISO(term.end), parseISO(term.start));
+  const span = dayDiff(parseISO(term.end), mondayOf(parseISO(term.start)));
   return Math.floor(span / 7) + 1;
 }
 
-/** Start date of a given 1-based week within a term. */
+/** Monday that starts a given 1-based school week within a term. */
 export function weekStartDate(term: Term, week: number): Date {
-  const start = parseISO(term.start);
-  start.setDate(start.getDate() + (week - 1) * 7);
-  return start;
+  const firstMonday = mondayOf(parseISO(term.start));
+  firstMonday.setDate(firstMonday.getDate() + (week - 1) * 7);
+  return firstMonday;
 }
 
 export interface TermStatus {

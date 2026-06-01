@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useToday } from "../lib/useToday";
 import { BRAND, type BrandColor } from "../brand";
 import { DoneToggle } from "../components/controls";
 import { makeId, usePersistentState } from "../lib/storage";
@@ -35,8 +36,9 @@ function seed(): Data {
 
 export default function WeeklyTracker({ config, jumpSignal }: { config: TermConfig; jumpSignal?: number }) {
   const [data, setData] = usePersistentState<Data>("weekly", seed);
+  const today = useToday();
   const maxWeeks = Math.max(...config.terms.map(weeksInTerm));
-  const status = termStatus(config);
+  const status = termStatus(config, today);
   const currentRef = useRef<HTMLDivElement>(null);
 
   const scrollToCurrent = () =>
