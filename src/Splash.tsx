@@ -57,13 +57,13 @@ export default function Splash({ onDone }: { onDone: () => void }) {
       <div
         style={{
           position: "relative",
-          width: 280,
-          height: 280,
+          width: 300,
+          height: 300,
           display: "grid",
           placeItems: "center",
         }}
       >
-        <div ref={box} style={{ position: "absolute", width: 280, height: 280 }} />
+        <div ref={box} style={{ position: "absolute", width: 300, height: 300 }} />
         <img
           src="/logo.png"
           alt="Fair Play OOSH"
@@ -72,7 +72,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
             width: 150,
             height: "auto",
             filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.12))",
-            animation: "fpo-splash-logo 0.9s ease 0.35s both",
+            animation: "fpo-splash-logo 1s ease 0.5s both",
           }}
         />
       </div>
