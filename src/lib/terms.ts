@@ -90,14 +90,25 @@ export function termStatus(config: TermConfig, today = new Date()): TermStatus {
     const start = parseISO(term.start);
     const end = parseISO(term.end);
     if (t0 >= start && t0 <= end) {
+      // School weeks roll over on Monday, so count whole weeks between the
+      // Monday of the term-start week and the Monday of today's week.
+      const weeksBetween = Math.floor(dayDiff(mondayOf(t0), mondayOf(start)) / 7);
       return {
         term,
-        week: Math.floor(dayDiff(t0, start) / 7) + 1,
+        week: weeksBetween + 1,
         day: networkDays(start, t0),
       };
     }
   }
   return { term: null, week: null, day: null };
+}
+
+/** The Monday (local midnight) of the week containing `d`. */
+function mondayOf(d: Date): Date {
+  const m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const offset = (m.getDay() + 6) % 7; // 0 = Monday … 6 = Sunday
+  m.setDate(m.getDate() - offset);
+  return m;
 }
 
 /** Which term (if any) a given date falls inside — used by the calendar overlay. */
