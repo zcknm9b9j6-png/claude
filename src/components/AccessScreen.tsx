@@ -3,10 +3,22 @@ import { BRAND } from "../brand";
 import { applyToLocal, pullCloud, setSyncCode } from "../lib/cloudSync";
 
 /**
- * Single access screen. The access code IS the password AND the cloud key:
- * type it on any device to unlock and load that code's data. Nothing is stored
- * per-device, so the same code works everywhere.
+ * Single access screen. One fixed access code unlocks the app; anything else is
+ * rejected. The correct code also doubles as the cloud key, so on unlock the
+ * matching data loads — same as before. The password is checked as a one-way
+ * SHA-256 hash so the plain code never appears in the source.
  */
+// SHA-256 of the access code. Compared against the hash of what's typed.
+const ACCESS_HASH =
+  "03fd3555a62337f972fa8aeead8919beef049462f52ce36c0239197d94ce1684";
+
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export default function AccessScreen({ onUnlock }: { onUnlock: () => void }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -14,13 +26,22 @@ export default function AccessScreen({ onUnlock }: { onUnlock: () => void }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = code.trim().toLowerCase();
-    if (clean.length < 4) {
+    const raw = code.trim();
+    if (raw.length < 4) {
       setError("Use at least 4 characters.");
       return;
     }
     setBusy(true);
     setError("");
+    // Gate on the one fixed access code (checked as a one-way hash). Wrong code
+    // is rejected here, before any unlock or cloud access.
+    if ((await sha256Hex(raw)) !== ACCESS_HASH) {
+      setError("Incorrect access code.");
+      setBusy(false);
+      return;
+    }
+    // Keep the original cloud key derivation so the same data loads as before.
+    const clean = raw.toLowerCase();
     try {
       // Remember the code as the cloud sync key for this session/device.
       setSyncCode(clean);
