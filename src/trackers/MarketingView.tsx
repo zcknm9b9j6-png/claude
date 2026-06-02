@@ -188,7 +188,7 @@ export default function MarketingView() {
           <p className="font-heading text-lg font-extrabold">Fair Play OOSH</p>
           <p className="mb-3 text-sm text-white/80">Out of School Hours Care · Vacation Care</p>
           <div className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-            <div><span className="text-xs font-bold uppercase tracking-wide text-white/70">Email</span><br />hello@fairplayoosh.com.au</div>
+            <div><span className="text-xs font-bold uppercase tracking-wide text-white/70">Email</span><br />support@fairplayoosh.com.au</div>
             <div><span className="text-xs font-bold uppercase tracking-wide text-white/70">Phone</span><br />(02) 4954 0000</div>
             <div><span className="text-xs font-bold uppercase tracking-wide text-white/70">Website</span><br />fairplayoosh.com.au</div>
             <div><span className="text-xs font-bold uppercase tracking-wide text-white/70">Locations</span><br />13 sites · Newcastle / Hunter</div>
