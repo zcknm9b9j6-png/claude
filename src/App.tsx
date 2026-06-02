@@ -14,6 +14,7 @@ import WeeklyTracker from "./trackers/WeeklyTracker";
 import YearlyTracker from "./trackers/YearlyTracker";
 import ResourcesView from "./trackers/ResourcesView";
 import QuickNotesView from "./trackers/QuickNotesView";
+import MarketingView from "./trackers/MarketingView";
 
 const TABS: (TabDef & { title: string; subtitle: string })[] = [
   { key: "weekly", label: "Weekly", color: "teal", title: "Weekly Tracker", subtitle: "Recurring tasks per week" },
@@ -23,6 +24,7 @@ const TABS: (TabDef & { title: string; subtitle: string })[] = [
   { key: "calendar", label: "Calendar", color: "pink", title: "Custom Calendar", subtitle: "Events & reminders" },
   { key: "resources", label: "Resources", color: "teal", title: "Resources", subtitle: "Passwords, links & templates" },
   { key: "notes", label: "Quick Notes", color: "orange", title: "Quick Notes", subtitle: "Jot & review notes" },
+  { key: "marketing", label: "Marketing & Design", color: "pink", title: "Marketing & Design", subtitle: "Brand reference & marketing ideas" },
 ];
 
 export default function App() {
@@ -130,6 +132,7 @@ export default function App() {
         {active === "calendar" && <CalendarView config={config} />}
         {active === "resources" && <ResourcesView />}
         {active === "notes" && <QuickNotesView />}
+        {active === "marketing" && <MarketingView />}
       </main>
 
       {settingsOpen && (
