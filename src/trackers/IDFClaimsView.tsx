@@ -46,7 +46,7 @@ interface Master {
 }
 type MasterStore = Record<string, Partial<Record<CareType, Master>>>;
 
-interface CChild { id: string; name: string; maxDays: string; daysAttended: string; absentClaimable: string }
+interface CChild { id: string; name: string; maxDays: string; attendedDays: string[]; absentDays: string[] }
 type Status = "draft" | "awaiting" | "completed";
 interface Claim {
   id: string;
@@ -79,7 +79,6 @@ function missingFields(c: Claim): string[] {
   if (!c.weekStart) m.push("week start date");
   if (!c.weekEnd) m.push("week ending date");
   if (c.children.length === 0) m.push("at least one child");
-  else if (c.children.some((ch) => !ch.daysAttended.trim())) m.push("days attended for every child");
   return m;
 }
 
@@ -124,7 +123,7 @@ export default function IDFClaimsView() {
       caseId: m.caseId, caseStart: m.caseStart, caseEnd: m.caseEnd,
       kuName: m.kuName, kuEmail: m.kuEmail, maxHours: m.maxHours,
       weekStart: "", weekEnd: "",
-      children: m.children.map((ch) => ({ id: makeId(), name: ch.name, maxDays: ch.maxDays, daysAttended: "", absentClaimable: "" })),
+      children: m.children.map((ch) => ({ id: makeId(), name: ch.name, maxDays: ch.maxDays, attendedDays: [], absentDays: [] })),
       staff: Object.fromEntries(DAYS.map((d) => [d, ""])),
       status: "draft", createdAt: Date.now(), updatedAt: Date.now(),
     };
@@ -412,6 +411,25 @@ function ReadRow({ label, value }: { label: string; value: string }) {
   return <div><span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">{label}</span><div className="text-sm text-ink">{value || "—"}</div></div>;
 }
 
+/** Mon–Fri multi-select. Tap a day to toggle it; selection stays in week order. */
+function DayPicker({ value, onChange, color }: { value: string[]; onChange: (days: string[]) => void; color: string }) {
+  const days = value ?? [];
+  const toggle = (d: string) => {
+    const next = days.includes(d) ? days.filter((x) => x !== d) : [...days, d];
+    onChange(DAYS.filter((x) => next.includes(x)));
+  };
+  return (
+    <div className="mt-1 flex gap-1.5">
+      {DAYS.map((d) => {
+        const on = days.includes(d);
+        return (
+          <button key={d} type="button" onClick={() => toggle(d)} className="flex-1 rounded-lg border py-2 text-xs font-bold transition" style={on ? { background: color, borderColor: color, color: "#fff" } : { borderColor: "#d1d5db", color: "#6b7280" }}>{d}</button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ClaimEditor({ claim, onBack, onChange, onChildChange, onDelete, onConfirm }: {
   claim: Claim;
   onBack: () => void;
@@ -474,12 +492,14 @@ function ClaimEditor({ claim, onBack, onChange, onChildChange, onDelete, onConfi
                 <span className="text-xs text-ink-soft">Max days claimable: <strong>{c.maxDays || "—"}</strong></span>
               </div>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-semibold text-ink-soft">Days actually attended
-                  <input type="number" min="0" inputMode="numeric" value={c.daysAttended} onChange={(e) => onChildChange(c.id, { daysAttended: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. 4" />
-                </label>
-                <label className="text-xs font-semibold text-ink-soft">Days booked but absent (non-contact funding)
-                  <input type="number" min="0" inputMode="numeric" value={c.absentClaimable} onChange={(e) => onChildChange(c.id, { absentClaimable: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. 1" />
-                </label>
+                <div>
+                  <span className="text-xs font-semibold text-ink-soft">Days actually attended <span className="text-ink-soft/60">({(c.attendedDays ?? []).length})</span></span>
+                  <DayPicker value={c.attendedDays ?? []} onChange={(days) => onChildChange(c.id, { attendedDays: days })} color={BRAND.lime.base} />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-ink-soft">Days booked but absent (non-contact funding) <span className="text-ink-soft/60">({(c.absentDays ?? []).length})</span></span>
+                  <DayPicker value={c.absentDays ?? []} onChange={(days) => onChildChange(c.id, { absentDays: days })} color={BRAND.orange.base} />
+                </div>
               </div>
             </div>
           ))}
@@ -559,8 +579,8 @@ function ClaimReview({ claim, onBack, onReopen, onComplete, onBackToAwaiting }: 
                 <tr key={c.id} className="border-t border-gray-100">
                   <td className="py-1.5 pr-3 font-semibold text-ink">{c.name || "—"}</td>
                   <td className="py-1.5 pr-3">{c.maxDays || "—"}</td>
-                  <td className="py-1.5 pr-3">{c.daysAttended || "—"}</td>
-                  <td className="py-1.5">{c.absentClaimable || "—"}</td>
+                  <td className="py-1.5 pr-3">{(c.attendedDays ?? []).join(", ") || "—"}</td>
+                  <td className="py-1.5">{(c.absentDays ?? []).join(", ") || "—"}</td>
                 </tr>
               ))}
             </tbody>
