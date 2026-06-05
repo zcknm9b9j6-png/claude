@@ -83,7 +83,8 @@ function missingFields(c: Claim): string[] {
   return m;
 }
 
-const inputCls = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-400";
+const fieldCls = "rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-400";
+const inputCls = `w-full ${fieldCls}`;
 
 type Nav =
   | { s: "services" }
@@ -379,13 +380,21 @@ function MastersEditor({ service, getMaster, updateMaster, onBack }: {
             <h4 className="font-bold text-ink">Children on the case</h4>
             <button onClick={addChild} className="pill" style={{ background: BRAND[CARE_COLOR[ct]].base }}>+ Add child</button>
           </div>
-          {m.children.length === 0 && <p className="rounded-lg border-2 border-dashed border-gray-200 p-3 text-center text-sm text-ink-soft">No children yet — add the children active on this case.</p>}
+          {m.children.length === 0 ? (
+            <p className="rounded-lg border-2 border-dashed border-gray-200 p-3 text-center text-sm text-ink-soft">No children yet — add the children active on this case.</p>
+          ) : (
+            <div className="mb-1 flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              <span className="flex-1">Child name</span>
+              <span className="w-24 sm:w-28">Max days</span>
+              <span className="w-6" />
+            </div>
+          )}
           <div className="space-y-2">
             {m.children.map((c) => (
               <div key={c.id} className="flex items-center gap-2">
-                <input value={c.name} onChange={(e) => editChild(c.id, { name: e.target.value })} className={`flex-1 ${inputCls}`} placeholder="Child name" />
-                <input type="number" min="0" inputMode="numeric" value={c.maxDays} onChange={(e) => editChild(c.id, { maxDays: e.target.value })} className={`w-28 ${inputCls}`} placeholder="Max days" title="Max days claimable" />
-                <button onClick={() => removeChild(c.id)} className="px-2 text-ink-soft hover:text-pink" aria-label="Remove">✕</button>
+                <input value={c.name} onChange={(e) => editChild(c.id, { name: e.target.value })} className={`min-w-0 flex-1 ${fieldCls}`} placeholder="Child name" />
+                <input type="number" min="0" inputMode="numeric" value={c.maxDays} onChange={(e) => editChild(c.id, { maxDays: e.target.value })} className={`w-24 shrink-0 sm:w-28 ${fieldCls}`} placeholder="Max days" title="Max days claimable" />
+                <button onClick={() => removeChild(c.id)} className="w-6 shrink-0 text-ink-soft hover:text-pink" aria-label="Remove">✕</button>
               </div>
             ))}
           </div>
