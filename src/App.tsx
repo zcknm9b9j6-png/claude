@@ -15,6 +15,7 @@ import YearlyTracker from "./trackers/YearlyTracker";
 import ResourcesView from "./trackers/ResourcesView";
 import QuickNotesView from "./trackers/QuickNotesView";
 import MarketingView from "./trackers/MarketingView";
+import IDFClaimsView from "./trackers/IDFClaimsView";
 
 const TABS: (TabDef & { title: string; subtitle: string })[] = [
   { key: "weekly", label: "Weekly", color: "teal", title: "Weekly Tracker", subtitle: "Recurring tasks per week" },
@@ -25,6 +26,7 @@ const TABS: (TabDef & { title: string; subtitle: string })[] = [
   { key: "resources", label: "Resources", color: "teal", title: "Resources", subtitle: "Passwords, links & templates" },
   { key: "notes", label: "Quick Notes", color: "orange", title: "Quick Notes", subtitle: "Jot & review notes" },
   { key: "marketing", label: "Marketing & Design", color: "pink", title: "Marketing & Design", subtitle: "Brand reference & marketing ideas" },
+  { key: "idf", label: "IDF Claims", color: "teal", title: "IDF Claims", subtitle: "Inclusion Development Fund claim forms" },
 ];
 
 export default function App() {
@@ -133,6 +135,7 @@ export default function App() {
         {active === "resources" && <ResourcesView />}
         {active === "notes" && <QuickNotesView />}
         {active === "marketing" && <MarketingView />}
+        {active === "idf" && <IDFClaimsView />}
       </main>
 
       {settingsOpen && (
