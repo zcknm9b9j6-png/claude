@@ -384,7 +384,7 @@ function MastersEditor({ service, getMaster, updateMaster, onBack }: {
             {m.children.map((c) => (
               <div key={c.id} className="flex items-center gap-2">
                 <input value={c.name} onChange={(e) => editChild(c.id, { name: e.target.value })} className={`flex-1 ${inputCls}`} placeholder="Child name" />
-                <input value={c.maxDays} onChange={(e) => editChild(c.id, { maxDays: e.target.value })} className={`w-32 ${inputCls}`} placeholder="Max days" />
+                <input type="number" min="0" inputMode="numeric" value={c.maxDays} onChange={(e) => editChild(c.id, { maxDays: e.target.value })} className={`w-28 ${inputCls}`} placeholder="Max days" title="Max days claimable" />
                 <button onClick={() => removeChild(c.id)} className="px-2 text-ink-soft hover:text-pink" aria-label="Remove">✕</button>
               </div>
             ))}
@@ -466,10 +466,10 @@ function ClaimEditor({ claim, onBack, onChange, onChildChange, onDelete, onConfi
               </div>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-semibold text-ink-soft">Days actually attended
-                  <input value={c.daysAttended} onChange={(e) => onChildChange(c.id, { daysAttended: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. Mon, Tue, Wed" />
+                  <input type="number" min="0" inputMode="numeric" value={c.daysAttended} onChange={(e) => onChildChange(c.id, { daysAttended: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. 4" />
                 </label>
-                <label className="text-xs font-semibold text-ink-soft">Absent days (claim non-contact funding)
-                  <input value={c.absentClaimable} onChange={(e) => onChildChange(c.id, { absentClaimable: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. Thu (sick)" />
+                <label className="text-xs font-semibold text-ink-soft">Days booked but absent (non-contact funding)
+                  <input type="number" min="0" inputMode="numeric" value={c.absentClaimable} onChange={(e) => onChildChange(c.id, { absentClaimable: e.target.value })} className={`mt-1 ${inputCls}`} placeholder="e.g. 1" />
                 </label>
               </div>
             </div>
@@ -543,7 +543,7 @@ function ClaimReview({ claim, onBack, onReopen, onComplete, onBackToAwaiting }: 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-left text-xs uppercase text-ink-soft">
-              <th className="py-1 pr-3">Child</th><th className="py-1 pr-3">Max days</th><th className="py-1 pr-3">Attended</th><th className="py-1">Absent (claimable)</th>
+              <th className="py-1 pr-3">Child</th><th className="py-1 pr-3">Max days</th><th className="py-1 pr-3">Attended</th><th className="py-1">Booked but absent</th>
             </tr></thead>
             <tbody>
               {claim.children.map((c) => (
