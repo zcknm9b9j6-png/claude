@@ -13,6 +13,22 @@ const HEADERS = {
 // travels with the data itself.
 const CODE_KEY = "fpo-sync-code";
 
+// "Dirty" = there are local edits that have NOT yet been confirmed-pushed to the
+// cloud. Kept outside PREFIX and persisted so it survives a reload/eviction. The
+// sync engine must never overwrite local data while this is set — it pushes the
+// pending edits up first, so in-progress work is never clobbered by a stale pull.
+const DIRTY_KEY = "fpo-sync-dirty";
+
+export function isDirty(): boolean {
+  return localStorage.getItem(DIRTY_KEY) === "1";
+}
+export function markDirty(): void {
+  localStorage.setItem(DIRTY_KEY, "1");
+}
+export function markClean(): void {
+  localStorage.removeItem(DIRTY_KEY);
+}
+
 export function getSyncCode(): string {
   return localStorage.getItem(CODE_KEY) ?? "";
 }

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BackupModal from "./components/BackupModal";
 import CloudSyncModal from "./components/CloudSyncModal";
 import InfoHeader from "./components/InfoHeader";
 import SettingsModal from "./components/SettingsModal";
 import Tabs, { type TabDef } from "./components/Tabs";
 import { usePersistentState } from "./lib/storage";
-import { applyToLocal, getSyncCode, pullCloud, pushCloud } from "./lib/cloudSync";
+import { applyToLocal, getSyncCode, isDirty, markClean, markDirty, pullCloud, pushCloud } from "./lib/cloudSync";
 import { DEFAULT_CONFIG, type TermConfig } from "./lib/terms";
 import CalendarView from "./trackers/CalendarView";
 import ProjectTracker from "./trackers/ProjectTracker";
@@ -41,23 +41,40 @@ export default function App() {
   );
   // Bumped after a cloud load so every view re-reads its freshly-updated storage.
   const [dataVersion, setDataVersion] = useState(0);
+  // True once the initial sync has settled — until then we ignore the change
+  // events that fire as each view first writes its state to localStorage.
+  const hydrated = useRef(false);
 
-  // On open: if a sync code is set, pull the latest cloud copy and apply it.
+  // On open: reconcile with the cloud. If this device has local edits that never
+  // reached the cloud (dirty), push them UP rather than overwriting them with a
+  // stale copy; otherwise pull the latest cloud copy down.
   useEffect(() => {
     const code = getSyncCode();
-    if (!code) return;
+    if (!code) {
+      hydrated.current = true;
+      return;
+    }
     let cancelled = false;
     setSyncStatus("loading");
-    pullCloud(code)
-      .then((cloud) => {
-        if (cancelled) return;
-        if (cloud && Object.keys(cloud).length) {
-          applyToLocal(cloud);
-          setDataVersion((v) => v + 1); // force views to re-read storage
+    (async () => {
+      try {
+        if (isDirty()) {
+          await pushCloud(code); // flush unsynced local edits, don't clobber them
+          markClean();
+        } else {
+          const cloud = await pullCloud(code);
+          if (!cancelled && cloud && Object.keys(cloud).length) {
+            applyToLocal(cloud);
+            setDataVersion((v) => v + 1); // force views to re-read storage
+          }
         }
-        setSyncStatus("synced");
-      })
-      .catch(() => !cancelled && setSyncStatus("error"));
+        if (!cancelled) setSyncStatus("synced");
+      } catch {
+        if (!cancelled) setSyncStatus("error");
+      } finally {
+        hydrated.current = true;
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -67,12 +84,13 @@ export default function App() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onChange = () => {
-      if (!getSyncCode()) return;
+      if (!getSyncCode() || !hydrated.current) return;
+      markDirty(); // there are now local edits not yet confirmed in the cloud
       setSyncStatus("saving");
       clearTimeout(timer);
       timer = setTimeout(() => {
         pushCloud(getSyncCode())
-          .then(() => setSyncStatus("synced"))
+          .then(() => { markClean(); setSyncStatus("synced"); })
           .catch(() => setSyncStatus("error"));
       }, 1200);
     };
@@ -83,11 +101,20 @@ export default function App() {
     };
   }, []);
 
-  // Re-pull when the tab regains focus, so the other device's edits show up.
+  // When the tab regains focus: if we have unsynced local edits, push them up
+  // (never overwrite them). Only when local is clean do we pull the other
+  // device's changes down. This stops a re-pull from wiping in-progress work.
   useEffect(() => {
     const onFocus = () => {
       const code = getSyncCode();
       if (!code) return;
+      if (isDirty()) {
+        setSyncStatus("saving");
+        pushCloud(code)
+          .then(() => { markClean(); setSyncStatus("synced"); })
+          .catch(() => setSyncStatus("error"));
+        return;
+      }
       pullCloud(code)
         .then((cloud) => {
           if (cloud && Object.keys(cloud).length) {
