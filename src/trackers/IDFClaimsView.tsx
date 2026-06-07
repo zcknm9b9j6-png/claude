@@ -95,7 +95,7 @@ type Nav =
 export default function IDFClaimsView() {
   const [masters, setMasters] = usePersistentState<MasterStore>("idf-masters", {});
   const [claims, setClaims] = usePersistentState<Claim[]>("idf-claims", []);
-  const [nav, setNav] = useState<Nav>({ s: "services" });
+  const [nav, setNav] = usePersistentState<Nav>("idf-nav", { s: "services" });
 
   const accent = BRAND.teal.base;
 
